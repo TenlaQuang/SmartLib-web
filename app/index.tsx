@@ -1,137 +1,161 @@
-// app/index.tsx
-import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, View, ScrollView } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
-export default function LibraryIndexPage() {
+export default function DashboardOverview() {
   return (
-    <View style={styles.container}>
-      {/* Thanh thông báo Option */}
-      <View style={styles.selectOptionBar}>
-        <Text style={styles.selectOptionText}>Select an Option</Text>
-        <Ionicons
-          name="chevron-forward"
-          size={18}
-          color={styles.selectOptionText.color}
-          style={styles.selectOptionArrow}
-        />
-      </View>
+    <ScrollView style={styles.container}>
+      <Text style={styles.pageTitle}>Tổng quan Hệ thống</Text>
 
-      {/* Văn bản chính lớn */}
-      <View style={styles.centerText}>
-        <Text style={styles.startByText}>
-          Start by{" "}
-          <Text style={styles.addCollectionText}>adding a collection.</Text>
-        </Text>
-      </View>
+      {/* Cards Thống kê */}
+      <View style={styles.statsRow}>
+        <View style={styles.statCard}>
+          <Ionicons name="book" size={32} color="#00A3AF" />
+          <View style={styles.statInfo}>
+            <Text style={styles.statLabel}>Tổng Sách</Text>
+            <Text style={styles.statValue}>1,245</Text>
+          </View>
+        </View>
 
-      {/* Các nút bộ lọc */}
-      <View style={styles.filterBar}>
-        {/* Nút Filters Teal */}
-        <TouchableOpacity style={styles.filterButtonTeal}>
-          <Ionicons name="funnel" size={16} color="#FFFFFF" />
-          <Text style={styles.filterButtonTextTeal}>Filters</Text>
-        </TouchableOpacity>
+        <View style={styles.statCard}>
+          <Ionicons name="wallet" size={32} color="#10B981" />
+          <View style={styles.statInfo}>
+            <Text style={styles.statLabel}>Doanh Thu Kì</Text>
+            <Text style={styles.statValue}>4.5M VNĐ</Text>
+          </View>
+        </View>
 
-        {/* Các nút Title/Cover trắng */}
-        <View style={styles.filterGroup}>
-          <TouchableOpacity style={styles.filterButtonWhite}>
-            <Ionicons
-              name="list"
-              size={16}
-              color={styles.filterButtonTextWhite.color}
-            />
-            <Text style={styles.filterButtonTextWhite}>Title</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.filterButtonWhite}>
-            <Ionicons
-              name="apps"
-              size={16}
-              color={styles.filterButtonTextWhite.color}
-            />
-            <Text style={styles.filterButtonTextWhite}>Cover</Text>
-          </TouchableOpacity>
+        <View style={styles.statCard}>
+          <Ionicons name="people" size={32} color="#F59E0B" />
+          <View style={styles.statInfo}>
+            <Text style={styles.statLabel}>Sinh Viên Mượn</Text>
+            <Text style={styles.statValue}>320</Text>
+          </View>
         </View>
       </View>
-    </View>
+
+      {/* Biểu đồ giả lập */}
+      <View style={styles.chartContainer}>
+        <Text style={styles.chartTitle}>Lưu lượng mượn sách tuần qua</Text>
+        <View style={styles.mockChart}>
+          {/* Cột giả lập */}
+          <View style={styles.barGroup}>
+             <View style={[styles.bar, { height: '30%' }]}></View>
+             <Text style={styles.barLabel}>T2</Text>
+          </View>
+          <View style={styles.barGroup}>
+             <View style={[styles.bar, { height: '60%' }]}></View>
+             <Text style={styles.barLabel}>T3</Text>
+          </View>
+          <View style={styles.barGroup}>
+             <View style={[styles.bar, { height: '40%' }]}></View>
+             <Text style={styles.barLabel}>T4</Text>
+          </View>
+          <View style={styles.barGroup}>
+             <View style={[styles.bar, { height: '80%' }]}></View>
+             <Text style={styles.barLabel}>T5</Text>
+          </View>
+          <View style={styles.barGroup}>
+             <View style={[styles.bar, { height: '50%' }]}></View>
+             <Text style={styles.barLabel}>T6</Text>
+          </View>
+          <View style={styles.barGroup}>
+             <View style={[styles.bar, { height: '90%' }]}></View>
+             <Text style={styles.barLabel}>T7</Text>
+          </View>
+          <View style={styles.barGroup}>
+             <View style={[styles.bar, { height: '20%' }]}></View>
+             <Text style={styles.barLabel}>CN</Text>
+          </View>
+        </View>
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: 20,
   },
-  selectOptionBar: {
-    backgroundColor: "#F2F4F7", // Màu xám nhạt nền Sidebar
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 4,
-    marginBottom: 40,
-  },
-  selectOptionText: {
-    fontSize: 16,
-    color: "#374151", // Màu text chính
-    fontWeight: "600",
-  },
-  selectOptionArrow: {
-    marginLeft: 5,
-  },
-  centerText: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 40,
-  },
-  startByText: {
-    fontSize: 32,
-    color: "#374151", // Màu text chính
+  pageTitle: {
+    fontSize: 26,
     fontWeight: "bold",
-    textAlign: "center",
+    color: "#1F2937",
+    marginBottom: 24,
   },
-  addCollectionText: {
-    color: "#00A3AF", // Màu xanh Teal chính
+  statsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 30,
+    flexWrap: "wrap",
+    gap: 20,
   },
-  filterBar: {
+  statCard: {
+    backgroundColor: "#FFF",
+    padding: 20,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
+    flex: 1,
+    minWidth: 200,
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 40,
   },
-  filterButtonTeal: {
+  statInfo: {
+    marginLeft: 20,
+  },
+  statLabel: {
+    fontSize: 14,
+    color: "#6B7280",
+    marginBottom: 4,
+  },
+  statValue: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#111827",
+  },
+  chartContainer: {
+    backgroundColor: "#FFF",
+    padding: 24,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
+    height: 350,
+  },
+  chartTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#374151",
+    marginBottom: 20,
+  },
+  mockChart: {
+    flex: 1,
     flexDirection: "row",
+    alignItems: "flex-end",
+    justifyContent: "space-around",
+    borderBottomWidth: 1,
+    borderColor: "#E5E7EB",
+    paddingBottom: 10,
+  },
+  barGroup: {
     alignItems: "center",
-    backgroundColor: "#00A3AF", // Màu xanh Teal chính
-    paddingHorizontal: 15,
-    paddingVertical: 8,
+    height: "100%",
+    justifyContent: "flex-end",
+    width: 40,
+  },
+  bar: {
+    backgroundColor: "#00A3AF",
+    width: "100%",
     borderRadius: 4,
   },
-  filterButtonTextTeal: {
-    color: "#FFFFFF", // Trắng nền
-    fontSize: 14,
-    fontWeight: "600",
-    marginLeft: 5,
-  },
-  filterGroup: {
-    flexDirection: "row",
-    marginLeft: "auto", // Đẩy sang phải
-  },
-  filterButtonWhite: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFFFFF", // Trắng nền
-    borderWidth: 1,
-    borderColor: "#EAEAEC",
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 4,
-    marginLeft: 10,
-  },
-  filterButtonTextWhite: {
-    color: "#374151", // Màu text chính
-    fontSize: 14,
-    fontWeight: "600",
-    marginLeft: 5,
-  },
+  barLabel: {
+    marginTop: 8,
+    color: "#6B7280",
+    fontSize: 12,
+  }
 });

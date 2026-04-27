@@ -16,6 +16,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
   // Danh sách Menu CHUẨN theo Use Case của dự án
   const menuItems = [
     { name: "Tổng quan", icon: "pie-chart-outline", route: "/" },
+    { name: "Xếp Sách & Vị Trí", icon: "albums-outline", route: "/storage" },
     { name: "Quản lý Sách", icon: "library-outline", route: "/books" },
     {
       name: "Mượn / Trả",
@@ -27,7 +28,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
   ];
 
   return (
-    <View style={[styles.sidebar, { width: isOpen ? 240 : 70 }]}>
+    <View style={[styles.sidebar, { width: isOpen ? 240 : 0, borderRightWidth: isOpen ? 1 : 0 }]}>
       <View style={styles.menuContainer}>
         {menuItems.map((item, index) => {
           const isActive = pathname === item.route;
@@ -49,7 +50,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
 
               {/* Chỉ hiển thị Text khi Sidebar đang mở */}
               {isOpen && (
-                <Text style={[styles.menuText, isActive && styles.activeText]}>
+                <Text style={[styles.menuText, isActive && styles.activeText]} numberOfLines={1}>
                   {item.name}
                 </Text>
               )}
@@ -65,7 +66,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
         >
           <Ionicons name="log-out-outline" size={24} color="#EF4444" />
           {isOpen && (
-            <Text style={[styles.menuText, { color: "#EF4444" }]}>
+            <Text style={[styles.menuText, { color: "#EF4444" }]} numberOfLines={1}>
               Đăng xuất
             </Text>
           )}
@@ -79,9 +80,8 @@ const styles = StyleSheet.create({
   sidebar: {
     backgroundColor: "#FFFFFF",
     paddingVertical: 20,
-    borderRightWidth: 1,
     borderRightColor: "#E5E7EB",
-    flex: 1,
+    overflow: "hidden", // Đảm bảo nội dung không bị tràn ra ngoài khi width = 0
     transitionDuration: "0.3s", // Hiệu ứng thu phóng mượt mà trên Web
   },
   menuContainer: {
