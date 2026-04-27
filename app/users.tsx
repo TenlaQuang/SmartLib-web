@@ -8,7 +8,13 @@ type TabObj = 'users' | 'nfc' | 'approvals';
 export default function UsersAndNFC() {
   const [activeTab, setActiveTab] = useState<TabObj>('approvals');
   
-  // States cho Phê duyệt
+
+  // States cho Quản lý User
+  const [usersList, setUsersList] = useState<any[]>([]);
+  const [reissueModalVisible, setReissueModalVisible] = useState(false);
+  const [reissueUser, setReissueUser] = useState<any>(null);
+  const [newNfcSerial, setNewNfcSerial] = useState("");
+\  // States cho Phê duyệt
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedReq, setSelectedReq] = useState<any>(null);
@@ -18,6 +24,45 @@ export default function UsersAndNFC() {
   const [actionMode, setActionMode] = useState<'none' | 'approve' | 'reject'>('none');
   const [nfcSerial, setNfcSerial] = useState("");
   const [rejectReason, setRejectReason] = useState("");
+
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const resp = await fetch(`${BASE_URL}/api/users`);
+      if (resp.ok) {
+        setUsersList(await resp.json());
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleReissueNfc = async () => {
+    if (!newNfcSerial.trim()) {
+      Alert.alert("Lỗi", "Vui lòng nhập hoặc quét mã NFC mới.");
+      return;
+    }
+    try {
+      const resp = await fetch(`${BASE_URL}/api/users/${reissueUser.user_id}/reissue-nfc`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ new_nfc_serial: newNfcSerial.trim() })
+      });
+      const data = await resp.json();
+      if (resp.ok) {
+        Alert.alert("Thành công", "Đã cấp lại NFC mới!");
+        setReissueModalVisible(false);
+        fetchUsers();
+      } else {
+        Alert.alert("Thất bại", data.detail || "Có lỗi xảy ra");
+      }
+    } catch (e) {
+      Alert.alert("Lỗi", "Không thể gửi kết nối");
+    }
+  };
 
   const fetchRequests = async () => {
     setLoading(true);
@@ -37,6 +82,8 @@ export default function UsersAndNFC() {
   useEffect(() => {
     if (activeTab === 'approvals') {
        fetchRequests();
+    } else if (activeTab === 'users') {
+       fetchUsers();
     }
   }, [activeTab]);
 
@@ -101,9 +148,69 @@ export default function UsersAndNFC() {
   const renderTabContent = () => {
     if (activeTab === 'users') {
       return (
-         <View style={styles.centerBox}>
-            <Text style={{fontSize: 16, color: '#6B7280'}}>Giao diện Quản lý Sinh Viên (Đang xây dựng...)</Text>
-         </View>
+        <View style={{flex: 1}}>
+          <Text style={styles.sectionTitle}>Danh sách Sinh viên / Cấp lại thẻ</Text>
+          {loading ? (
+             <ActivityIndicator size="large" color="#00A3AF" style={{marginTop: 20}} />
+          ) : usersList.length === 0 ? (
+             <View style={styles.centerBox}>
+                <Ionicons name="people-outline" size={48} color="#D1D5DB" />
+                <Text style={{color: '#6B7280', marginTop: 10}}>Chưa có người dùng nào thành viên.</Text>
+             </View>
+          ) : (
+             <ScrollView style={{flex: 1}}>
+                {usersList.map(u => (
+                   <View key={u.user_id} style={styles.reqCard}>
+                      <View style={styles.reqAvatar}>
+                         <Ionicons name="person" size={24} color="#00A3AF" />
+                      </View>
+                      <View style={{flex: 1}}>
+                         <Text style={styles.reqName}>{u.full_name} <Text style={styles.reqCode}>- {u.user_code}</Text></Text>
+                         <Text style={styles.reqEmail}>Email: {u.email || "N/A"}</Text>
+                         <Text style={{color: '#6B7280', fontSize: 13, marginTop: 4}}>NFC: {u.nfc_tag_id}</Text>
+                      </View>
+                      <TouchableOpacity 
+                         style={[styles.btnOutline, {borderColor: '#00A3AF', borderWidth: 1, borderRadius: 6, paddingVertical: 6, paddingHorizontal: 12, marginRight: 0}]}
+                         onPress={() => {
+                            setReissueUser(u);
+                            setNewNfcSerial("");
+                            setReissueModalVisible(true);
+                         }}
+                      >
+                         <Text style={{color: '#00A3AF', fontWeight: 'bold', fontSize: 13}}>Cấp lại Thẻ</Text>
+                      </TouchableOpacity>
+                   </View>
+                ))}
+             </ScrollView>
+          )}
+
+          {/* Reissue Modal */}
+          <Modal visible={reissueModalVisible} transparent animationType="fade">
+            <View style={styles.modalOverlay}>
+               <View style={styles.modalContainer}>
+                   <View style={styles.modalHeader}>
+                      <Text style={styles.modalTitle}>Cấp Lại Thẻ NFC</Text>
+                      <TouchableOpacity onPress={() => setReissueModalVisible(false)}>
+                         <Ionicons name="close" size={26} color="#6B7280" />
+                      </TouchableOpacity>
+                   </View>
+                   <View style={{padding: 24}}>
+                       {reissueUser && (
+                         <Text style={{fontSize: 15, color: '#374151', marginBottom: 15}}>
+                           Thao tác này sẽ VÔ HIỆU HOÁ thẻ NFC hiện tại của SV <Text style={{fontWeight: 'bold'}}>{reissueUser.full_name}</Text> ({reissueUser.user_code}) và gán mã thẻ mới.
+                         </Text>
+                       )}
+                       <Text style={styles.inputTitle}>Quét hoặc nhập Serial Number MỚI:</Text>
+                       <TextInput style={styles.textInput} placeholder="Đưa thẻ trắng vào thiết bị đọc..." value={newNfcSerial} onChangeText={setNewNfcSerial} autoFocus />
+                       <View style={styles.actionRow}>
+                          <TouchableOpacity style={styles.btnOutline} onPress={() => setReissueModalVisible(false)}><Text style={styles.btnOutlineText}>Huỷ bỏ</Text></TouchableOpacity>
+                          <TouchableOpacity style={styles.btnApproveAction} onPress={handleReissueNfc}><Text style={styles.btnText}>Lưu Thay Đổi</Text></TouchableOpacity>
+                       </View>
+                   </View>
+               </View>
+            </View>
+          </Modal>
+        </View>
       );
     }
     if (activeTab === 'nfc') {
