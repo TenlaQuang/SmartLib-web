@@ -28,8 +28,8 @@ export default function StorageAndShelves() {
         fetch(`${BASE_URL}/api/books/title-groups`).then(r => r.json()),
         getLocations()
       ]);
-      setTitleGroups(groupsResp);
-      setLocations(locsData);
+      setTitleGroups(Array.isArray(groupsResp) ? groupsResp : []);
+      setLocations(Array.isArray(locsData) ? locsData : []);
     } catch (error) {
       console.error("Lỗi tải dữ liệu:", error);
     } finally {
