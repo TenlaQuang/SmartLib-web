@@ -7,6 +7,7 @@ export default function StorageAndShelves() {
   const [titleGroups, setTitleGroups] = useState<any[]>([]);
   const [locations, setLocations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   // States xếp kệ theo nhóm
   const [selectedGroup, setSelectedGroup] = useState<any>(null);
@@ -23,15 +24,23 @@ export default function StorageAndShelves() {
 
   const fetchData = async () => {
     setLoading(true);
+    setApiError(null);
     try {
-      const [groupsResp, locsData] = await Promise.all([
-        fetch(`${BASE_URL}/api/books/title-groups`).then(r => r.json()),
-        getLocations()
-      ]);
-      setTitleGroups(Array.isArray(groupsResp) ? groupsResp : []);
+      const groupsRes = await fetch(`${BASE_URL}/api/books/title-groups`);
+      const groupsResp = await groupsRes.json();
+      
+      if (!groupsRes.ok) {
+        setApiError(`API lỗi ${groupsRes.status}: ${groupsResp?.detail || 'Máy chủ đang khởi động lại, vui lòng thử lại sau 1 phút.'}`);
+        setTitleGroups([]);
+      } else {
+        setTitleGroups(Array.isArray(groupsResp) ? groupsResp : []);
+      }
+      
+      const locsData = await getLocations();
       setLocations(Array.isArray(locsData) ? locsData : []);
     } catch (error) {
       console.error("Lỗi tải dữ liệu:", error);
+      setApiError('Không thể kết nối đến máy chủ. Hãy kiểm tra kết nối mạng hoặc thử lại sau.');
     } finally {
       setLoading(false);
     }
@@ -114,7 +123,12 @@ export default function StorageAndShelves() {
     : titleGroups;
 
   if (loading) {
-    return <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}><ActivityIndicator size="large" color="#00A3AF" /></View>;
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#00A3AF" />
+        <Text style={{ marginTop: 12, color: '#6B7280', fontSize: 14 }}>Đang tải dữ liệu từ máy chủ...</Text>
+      </View>
+    );
   }
 
   return (
@@ -130,6 +144,19 @@ export default function StorageAndShelves() {
           <Text style={{ color: '#fff', fontWeight: 'bold' }}>Khởi Tạo Hàng Loạt</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Banner lỗi API */}
+      {apiError && (
+        <View style={{ backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FECACA', borderRadius: 8, padding: 15, marginBottom: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+            <Ionicons name="warning-outline" size={20} color="#DC2626" style={{ marginRight: 10 }} />
+            <Text style={{ color: '#DC2626', fontSize: 13, flex: 1 }}>{apiError}</Text>
+          </View>
+          <TouchableOpacity onPress={fetchData} style={{ marginLeft: 15, backgroundColor: '#DC2626', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6 }}>
+            <Text style={{ color: '#fff', fontSize: 12, fontWeight: 'bold' }}>Thử lại</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Filter tabs */}
       <View style={styles.filterRow}>
