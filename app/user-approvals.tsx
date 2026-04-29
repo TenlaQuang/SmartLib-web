@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View, Image } from "react-native";
 import { BASE_URL } from "../services/api";
 
 export default function UserApprovals() {
@@ -103,6 +103,16 @@ export default function UserApprovals() {
                         <Text style={styles.detailText}>SĐT: {selectedReq.phone_number}</Text>
                         <Text style={styles.detailText}>Email: {selectedReq.email}</Text>
                         <Text style={styles.detailText}>Thanh toán: {selectedReq.payment_status === 'paid' ? 'Đã thanh toán' : 'Chưa thanh toán'}</Text>
+                        
+                        {selectedReq.invoice_image_url && (
+                           <View style={{ marginTop: 15, alignItems: 'center' }}>
+                              <Text style={{ fontSize: 14, fontWeight: 'bold', marginBottom: 5 }}>Ảnh hóa đơn:</Text>
+                              <Image 
+                                 source={{ uri: selectedReq.invoice_image_url }} 
+                                 style={{ width: '100%', height: 200, borderRadius: 8, resizeMode: 'contain', backgroundColor: '#F3F4F6' }} 
+                              />
+                           </View>
+                        )}
                         
                         <View style={{ marginTop: 20, padding: 15, backgroundColor: selectedReq.nfc_serial ? '#DEF7EC' : '#FEF3C7', borderRadius: 8 }}>
                            {selectedReq.nfc_serial ? (
