@@ -283,7 +283,7 @@ export default function BookManagementPage() {
         <Text style={[styles.cell, { flex: 1 }]}>{item.market_price} đ</Text>
         <View style={styles.actionCell}>
           <TouchableOpacity style={styles.actionButton} onPress={() => openEditGroupModal(item)}>
-            <Ionicons name="pencil" size={18} color="#00A3AF" />
+            <Ionicons name="pencil" size={18} color="#80A1BA" />
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionButton} onPress={() => handleDeleteGroup(item)}>
             <Ionicons name="trash" size={18} color="#EF4444" />
@@ -346,7 +346,7 @@ export default function BookManagementPage() {
         </View>
 
         {loading ? (
-          <ActivityIndicator size="large" color="#00A3AF" style={{ marginTop: 20 }} />
+          <ActivityIndicator size="large" color="#80A1BA" style={{ marginTop: 20 }} />
         ) : (
           <FlatList
             data={books}
@@ -404,8 +404,8 @@ export default function BookManagementPage() {
               <Text style={styles.label}>Ảnh Bìa:</Text>
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <TouchableOpacity style={styles.uploadBtn} onPress={pickImage}>
-                   <Ionicons name="cloud-upload-outline" size={20} color="#00A3AF" />
-                   <Text style={{ color: '#00A3AF', marginLeft: 8, fontWeight: 'bold' }}>Chọn Tệp</Text>
+                   <Ionicons name="cloud-upload-outline" size={20} color="#80A1BA" />
+                   <Text style={{ color: '#80A1BA', marginLeft: 8, fontWeight: 'bold' }}>Chọn Tệp</Text>
                 </TouchableOpacity>
                 {localImageUri ? <Image source={{ uri: localImageUri }} style={styles.previewImg} /> : imageUrl ? <Image source={{ uri: BASE_URL + imageUrl }} style={styles.previewImg} /> : <Text style={{ marginLeft: 10, color: '#6B7280', fontStyle: 'italic', fontSize: 12 }}>Chưa có ảnh</Text>}
               </View>
@@ -448,7 +448,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, padding: 20 },
   headerBar: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 },
   title: { fontSize: 24, fontWeight: "bold", color: "#1F2937" },
-  addButton: { backgroundColor: "#00A3AF", flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 10, borderRadius: 8 },
+  addButton: { backgroundColor: "#80A1BA", flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 10, borderRadius: 8 },
   addButtonText: { color: "#FFFFFF", marginLeft: 8, fontWeight: "bold", fontSize: 14 },
   tableContainer: { backgroundColor: "#FFFFFF", borderRadius: 8, shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 5, elevation: 2, flex: 1, overflow: "hidden" },
   tableHeader: { flexDirection: "row", backgroundColor: "#F3F4F6", paddingVertical: 12, paddingHorizontal: 16, borderBottomWidth: 1, borderColor: "#E5E7EB" },
@@ -464,14 +464,14 @@ const styles = StyleSheet.create({
   formGroup: { marginBottom: 16 },
   label: { fontSize: 14, color: "#4B5563", fontWeight: "500", marginBottom: 8 },
   labelRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
-  generateText: { fontSize: 12, color: "#00A3AF", fontWeight: "bold" },
+  generateText: { fontSize: 12, color: "#80A1BA", fontWeight: "bold" },
   input: { borderWidth: 1, borderColor: "#D1D5DB", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, fontSize: 15, color: "#1F2937" },
   modalActions: { flexDirection: "row", justifyContent: "flex-end", marginTop: 10 },
   cancelBtn: { paddingHorizontal: 20, paddingVertical: 10, marginRight: 10, borderRadius: 8 },
   cancelBtnText: { color: "#6B7280", fontWeight: "600" },
-  saveBtn: { backgroundColor: "#00A3AF", paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 },
+  saveBtn: { backgroundColor: "#80A1BA", paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 },
   saveBtnText: { color: "#FFFFFF", fontWeight: "600" },
-  uploadBtn: { flexDirection: "row", alignItems: "center", backgroundColor: "#F0FDFA", paddingHorizontal: 15, paddingVertical: 10, borderRadius: 8, borderWidth: 1, borderColor: "#00A3AF" },
+  uploadBtn: { flexDirection: "row", alignItems: "center", backgroundColor: "#F0FDFA", paddingHorizontal: 15, paddingVertical: 10, borderRadius: 8, borderWidth: 1, borderColor: "#80A1BA" },
   previewImg: { width: 45, height: 60, marginLeft: 15, borderRadius: 4, borderWidth: 1, borderColor: "#E5E7EB" },
   dropdownBtn: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, backgroundColor: '#FFF' },
   dropdownBtnText: { fontSize: 15, color: '#1F2937' },

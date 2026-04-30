@@ -83,7 +83,7 @@ export default function UsersManagement() {
             <Text style={styles.headerTitle}>Quản lý Sinh Viên</Text>
          </View>
 
-         {loading ? <ActivityIndicator size="large" color="#00A3AF" style={{ marginTop: 20 }} /> : (
+         {loading ? <ActivityIndicator size="large" color="#80A1BA" style={{ marginTop: 20 }} /> : (
             <ScrollView style={{ flex: 1 }}>
                <View style={styles.section}>
                   <Text style={styles.sectionTitle}>Đã liên kết NFC (Đang hoạt động)</Text>
@@ -165,7 +165,7 @@ export default function UsersManagement() {
 }
 
 const styles = StyleSheet.create({
-   container: { flex: 1, backgroundColor: "#F9FAFB", padding: 20 },
+   container: { flex: 1, backgroundColor: "transparent", padding: 20 },
    header: { marginBottom: 20 },
    headerTitle: { fontSize: 24, fontWeight: "bold", color: "#111827" },
    section: { marginBottom: 20 },
@@ -176,17 +176,17 @@ const styles = StyleSheet.create({
       borderWidth: 1, borderColor: '#E5E7EB'
    },
    userInfo: { flexDirection: 'row', alignItems: 'center' },
-   avatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#00A3AF', justifyContent: 'center', alignItems: 'center', marginRight: 15 },
+   avatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#80A1BA', justifyContent: 'center', alignItems: 'center', marginRight: 15 },
    avatarText: { color: '#FFFFFF', fontSize: 18, fontWeight: 'bold' },
    userName: { fontSize: 16, fontWeight: '600', color: '#111827' },
    userCode: { fontSize: 13, color: '#6B7280' },
    nfcBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#DEF7EC', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20 },
    btnRemind: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FEF3C7', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 6 },
-   btnAssign: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#00A3AF', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 6 },
+   btnAssign: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#80A1BA', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 6 },
    modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "center", alignItems: "center" },
    modalContent: { backgroundColor: "#FFF", width: 500, borderRadius: 12, padding: 24 },
    modalHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 },
    modalTitle: { fontSize: 18, fontWeight: "bold", color: "#111827" },
    textInput: { borderWidth: 1, borderColor: "#D1D5DB", borderRadius: 8, padding: 12, fontSize: 15, backgroundColor: "#F9FAFB", marginBottom: 20 },
-   btnApproveAction: { backgroundColor: "#00A3AF", padding: 14, borderRadius: 8 }
+   btnApproveAction: { backgroundColor: "#80A1BA", padding: 14, borderRadius: 8 }
 });

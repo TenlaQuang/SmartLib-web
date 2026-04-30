@@ -63,7 +63,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
                 <Ionicons
                   name={item.icon as any}
                   size={24}
-                  color={(isActive || isDropdownActive) ? '#00A3AF' : '#6B7280'}
+                  color={(isActive || isDropdownActive) ? '#FFFFFF' : '#E0E7FF'}
                 />
                 {isOpen && (
                   <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -71,7 +71,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
                       {item.name}
                     </Text>
                     {item.isDropdown && (
-                       <Ionicons name={usersExpanded ? 'chevron-up' : 'chevron-down'} size={18} color='#6B7280' />
+                       <Ionicons name={usersExpanded ? 'chevron-up' : 'chevron-down'} size={18} color='#E0E7FF' />
                     )}
                   </View>
                 )}
@@ -111,7 +111,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
 
 const styles = StyleSheet.create({
   sidebar: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#91C4C3',
     paddingVertical: 20,
     borderRightColor: '#E5E7EB',
     overflow: 'hidden',
@@ -126,9 +126,9 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   menuItemCollapsed: { justifyContent: 'center', paddingHorizontal: 0 },
-  activeItem: { backgroundColor: '#F0FDFA', borderRightWidth: 4, borderRightColor: '#00A3AF' },
-  menuText: { fontSize: 15, color: '#4B5563', marginLeft: 15, fontWeight: '500' },
-  activeText: { color: '#00A3AF', fontWeight: '700' },
+  activeItem: { backgroundColor: '#B4DEBD', borderRightWidth: 4, borderRightColor: '#FFFFFF' },
+  menuText: { fontSize: 15, color: '#FFFFFF', marginLeft: 15, fontWeight: '500' },
+  activeText: { color: '#FFFFFF', fontWeight: '700' },
   submenuContainer: {
     paddingLeft: 45,
     paddingVertical: 5,
@@ -146,17 +146,17 @@ const styles = StyleSheet.create({
   },
   submenuText: {
     fontSize: 14,
-    color: '#6B7280'
+    color: '#E0E7FF'
   },
   activeSubmenuText: {
-    color: '#00A3AF',
+    color: '#FFFFFF',
     fontWeight: 'bold'
   },
   bullet: {
-    width: 6, height: 6, borderRadius: 3, backgroundColor: '#D1D5DB', marginRight: 10
+    width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.4)', marginRight: 10
   },
   activeBullet: {
-    backgroundColor: '#00A3AF'
+    backgroundColor: '#FFFFFF'
   },
-  footer: { paddingBottom: 20, borderTopWidth: 1, borderTopColor: '#E5E7EB', paddingTop: 10 },
+  footer: { paddingBottom: 20, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.2)', paddingTop: 10 },
 });

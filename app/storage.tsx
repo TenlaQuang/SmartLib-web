@@ -124,8 +124,8 @@ export default function StorageAndShelves() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" color="#00A3AF" />
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: '#FFF7DD' }}>
+        <ActivityIndicator size="large" color="#80A1BA" />
         <Text style={{ marginTop: 12, color: '#6B7280', fontSize: 14 }}>Đang tải dữ liệu từ máy chủ...</Text>
       </View>
     );
@@ -369,14 +369,14 @@ export default function StorageAndShelves() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: '#F9FAFB' },
+  container: { flex: 1, padding: 20, backgroundColor: 'transparent' },
   pageTitle: { fontSize: 26, fontWeight: "bold", color: "#1F2937", marginBottom: 5 },
   subtitle: { fontSize: 14, color: "#6B7280" },
-  createBtn: { flexDirection: 'row', backgroundColor: '#00A3AF', paddingHorizontal: 15, paddingVertical: 10, borderRadius: 6, alignItems: 'center' },
+  createBtn: { flexDirection: 'row', backgroundColor: '#80A1BA', paddingHorizontal: 15, paddingVertical: 10, borderRadius: 6, alignItems: 'center' },
 
   filterRow: { flexDirection: 'row', gap: 12, marginBottom: 20 },
   filterBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: '#F3F4F6', borderWidth: 1, borderColor: '#E5E7EB' },
-  filterBtnActive: { backgroundColor: '#00A3AF', borderColor: '#00A3AF' },
+  filterBtnActive: { backgroundColor: '#80A1BA', borderColor: '#80A1BA' },
   filterText: { fontSize: 13, color: '#6B7280', fontWeight: '500' },
   filterTextActive: { color: '#fff' },
 
@@ -408,11 +408,11 @@ const styles = StyleSheet.create({
   modalTitle: { fontSize: 18, fontWeight: "bold", color: "#111827" },
   modalFooter: { flexDirection: "row", justifyContent: "flex-end", marginTop: 25, gap: 10 },
   locationItem: { flexDirection: 'row', alignItems: 'center', padding: 12, backgroundColor: '#F9FAFB', borderBottomWidth: 1, borderColor: '#E5E7EB' },
-  locationItemActive: { backgroundColor: '#00A3AF', borderColor: '#007A83' },
+  locationItemActive: { backgroundColor: '#91C4C3', borderColor: '#80A1BA' },
 
   inputGroup: { marginBottom: 15 },
   label: { fontSize: 14, fontWeight: "500", color: "#374151", marginBottom: 6 },
   input: { borderWidth: 1, borderColor: "#D1D5DB", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, backgroundColor: "#F9FAFB", color: "#111827" },
   cancelBtn: { paddingVertical: 10, paddingHorizontal: 16, borderRadius: 6, backgroundColor: "#E5E7EB" },
-  saveBtn: { paddingVertical: 10, paddingHorizontal: 16, borderRadius: 6, backgroundColor: "#00A3AF" },
+  saveBtn: { paddingVertical: 10, paddingHorizontal: 16, borderRadius: 6, backgroundColor: '#80A1BA' },
 });

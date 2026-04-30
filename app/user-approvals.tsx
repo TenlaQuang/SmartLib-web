@@ -66,11 +66,11 @@ export default function UserApprovals() {
             <Text style={styles.headerTitle}>Duyệt Đơn Đăng Ký</Text>
          </View>
 
-         {loading ? <ActivityIndicator size="large" color="#00A3AF" /> : (
+         {loading ? <ActivityIndicator size="large" color="#80A1BA" /> : (
             <ScrollView style={{ flex: 1 }}>
                {requests.map(req => (
                   <TouchableOpacity key={req.request_id} style={styles.reqCard} onPress={() => { setSelectedReq(req); setShowModal(true); }}>
-                     <View style={styles.reqAvatar}><Ionicons name="document-text" size={24} color="#00A3AF" /></View>
+                     <View style={styles.reqAvatar}><Ionicons name="document-text" size={24} color="#FFFFFF" /></View>
                      <View style={{ flex: 1 }}>
                         <Text style={styles.reqName}>{req.full_name} ({req.user_code})</Text>
                         <Text style={styles.reqDetail}>Trạng thái TT: {req.payment_status}</Text>
@@ -80,7 +80,7 @@ export default function UserApprovals() {
                            <Text style={{color: '#B45309', fontSize: 12}}><Ionicons name="alert-circle"/> Không kèm thẻ NFC (Sẽ nhận sau)</Text>
                         )}
                      </View>
-                     <View style={styles.btnAction}><Text style={{color: '#00A3AF', fontWeight: 'bold'}}>Xem xét</Text></View>
+                     <View style={styles.btnAction}><Text style={{color: '#FFFFFF', fontWeight: 'bold'}}>Xem xét</Text></View>
                   </TouchableOpacity>
                ))}
                {requests.length === 0 && <Text style={{color: '#6B7280', marginTop: 20}}>Không có đơn đăng ký nào chờ duyệt.</Text>}
@@ -128,7 +128,7 @@ export default function UserApprovals() {
                      <TouchableOpacity style={[styles.btn, { backgroundColor: '#EF4444', flex: 1 }]} onPress={handleReject}>
                         <Text style={styles.btnText}>Từ Chối Đơn</Text>
                      </TouchableOpacity>
-                     <TouchableOpacity style={[styles.btn, { backgroundColor: '#00A3AF', flex: 2 }]} onPress={handleApprove}>
+                     <TouchableOpacity style={[styles.btn, { backgroundColor: '#80A1BA', flex: 2 }]} onPress={handleApprove}>
                         <Text style={styles.btnText}>Duyệt {selectedReq?.nfc_serial ? 'Kích Hoạt Luôn' : 'Cho Phép Lấy Thẻ'}</Text>
                      </TouchableOpacity>
                   </View>
@@ -140,14 +140,14 @@ export default function UserApprovals() {
 }
 
 const styles = StyleSheet.create({
-   container: { flex: 1, backgroundColor: "#F9FAFB", padding: 20 },
+   container: { flex: 1, backgroundColor: "transparent", padding: 20 },
    header: { marginBottom: 20 },
    headerTitle: { fontSize: 24, fontWeight: "bold", color: "#111827" },
-   reqCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF', padding: 15, borderRadius: 8, marginBottom: 10, borderWidth: 1, borderColor: '#E5E7EB' },
-   reqAvatar: { width: 48, height: 48, borderRadius: 8, backgroundColor: '#E0F2FE', justifyContent: 'center', alignItems: 'center', marginRight: 15 },
+   reqCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF', padding: 15, borderRadius: 8, marginBottom: 10, borderLeftWidth: 4, borderLeftColor: '#91C4C3' },
+   reqAvatar: { width: 48, height: 48, borderRadius: 8, backgroundColor: '#80A1BA', justifyContent: 'center', alignItems: 'center', marginRight: 15 },
    reqName: { fontSize: 16, fontWeight: 'bold', color: '#111827' },
    reqDetail: { fontSize: 13, color: '#6B7280', marginBottom: 5 },
-   btnAction: { paddingHorizontal: 15, paddingVertical: 8, backgroundColor: '#E0F2FE', borderRadius: 6 },
+   btnAction: { paddingHorizontal: 15, paddingVertical: 8, backgroundColor: '#91C4C3', borderRadius: 6 },
    modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "center", alignItems: "center" },
    modalContent: { backgroundColor: "#FFF", width: 500, borderRadius: 12, padding: 24 },
    modalHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 },

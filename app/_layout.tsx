@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#FFFFFF" },
   header: {
     height: 60,
-    backgroundColor: "#00A3AF",
+    backgroundColor: "#80A1BA",
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 20,
@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
   mainContent: {
     flex: 1,
     padding: 30,
-    backgroundColor: "#F9FAFB", // Màu nền hơi xám nhẹ để nổi bật các thẻ Card trắng
+    backgroundColor: "#FFF7DD", // Màu nền mới
     overflowY: "auto",
   },
 });

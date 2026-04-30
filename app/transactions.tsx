@@ -111,8 +111,8 @@ export default function TransactionsAndLocations() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" color="#00A3AF" />
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: '#FFF7DD' }}>
+        <ActivityIndicator size="large" color="#80A1BA" />
       </View>
     );
   }
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
   container: { 
     flex: 1, 
     padding: 20,
-    backgroundColor: '#F9FAFB'
+    backgroundColor: 'transparent'
   },
   header: {
     flexDirection: 'row',

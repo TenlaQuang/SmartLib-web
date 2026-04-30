@@ -9,7 +9,7 @@ export default function SystemSettings() {
 
       <View style={styles.settingCard}>
         <View style={styles.cardHeader}>
-          <Ionicons name="cash-outline" size={24} color="#00A3AF" />
+          <Ionicons name="cash-outline" size={24} color="#80A1BA" />
           <Text style={styles.cardTitle}>Quy định Phí phạt & Cọc</Text>
         </View>
 
@@ -36,7 +36,7 @@ export default function SystemSettings() {
 
       <View style={styles.settingCard}>
         <View style={styles.cardHeader}>
-          <Ionicons name="hardware-chip-outline" size={24} color="#00A3AF" />
+          <Ionicons name="hardware-chip-outline" size={24} color="#80A1BA" />
           <Text style={styles.cardTitle}>Thông tin Đầu đọc Card RFID/NFC</Text>
         </View>
         <Text style={{ color: "#4B5563", marginBottom: 10 }}>
@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
   },
   helperText: { fontSize: 12, color: "#9CA3AF", marginTop: 4 },
   saveBtn: {
-    backgroundColor: "#00A3AF",
+    backgroundColor: "#80A1BA",
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: "center",

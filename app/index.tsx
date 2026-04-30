@@ -10,7 +10,7 @@ export default function DashboardOverview() {
       {/* Cards Thống kê */}
       <View style={styles.statsRow}>
         <View style={styles.statCard}>
-          <Ionicons name="book" size={32} color="#00A3AF" />
+          <Ionicons name="book" size={32} color="#80A1BA" />
           <View style={styles.statInfo}>
             <Text style={styles.statLabel}>Tổng Sách</Text>
             <Text style={styles.statValue}>1,245</Text>
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
     width: 40,
   },
   bar: {
-    backgroundColor: "#00A3AF",
+    backgroundColor: "#91C4C3",
     width: "100%",
     borderRadius: 4,
   },
