@@ -178,14 +178,28 @@ export default function StorageAndShelves() {
                                       <Ionicons name="book" size={20} color="#9CA3AF" />
                                     )}
                                   </View>
-                                  <Text style={styles.bookCountLabel}>SL: {ub.count}</Text>
+                                  {/* Số lượng bản sao */}
+                                  <View style={{ flexDirection: 'row', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
+                                    <View style={styles.badgeTotal}>
+                                      <Text style={styles.badgeTotalText}>Tổng: {ub.total_copies}</Text>
+                                    </View>
+                                    {ub.available_count > 0 && (
+                                      <View style={styles.badgeDone}>
+                                        <Text style={styles.badgeDoneText}>🟢 Sẵn có: {ub.available_count}</Text>
+                                      </View>
+                                    )}
+                                    {ub.borrowed_count > 0 && (
+                                      <View style={styles.badgeWaiting}>
+                                        <Text style={styles.badgeWaitingText}>🔴 Đang mượn: {ub.borrowed_count}</Text>
+                                      </View>
+                                    )}
+                                  </View>
                                 </View>
                               ))
                             ) : (
                               <Text style={styles.emptyLevelText}>Trống</Text>
                             )}
                           </View>
-                          {/* Đường line kệ sách */}
                           <View style={styles.shelfLine} />
                         </View>
                       </View>
@@ -252,7 +266,28 @@ export default function StorageAndShelves() {
                   <View style={styles.bookImagePlaceholder}><Ionicons name="book-outline" size={30} color="#9CA3AF" /></View>
                 )}
                 <Text style={styles.bookTitle} numberOfLines={1}>{group.title}</Text>
-                <View style={styles.badgeWaiting}><Text style={styles.badgeWaitingText}>Chờ: {group.copies_waiting}</Text></View>
+                
+                <View style={{ flexDirection: 'row', gap: 4, marginTop: 4, flexWrap: 'wrap' }}>
+                  <View style={[styles.badgeTotal, { paddingHorizontal: 4 }]}>
+                    <Text style={{ fontSize: 10, color: '#0369A1' }}>Tổng: {group.total_copies}</Text>
+                  </View>
+                  {group.available_count > 0 && (
+                    <View style={[styles.badgeDone, { paddingHorizontal: 4 }]}>
+                      <Text style={{ fontSize: 10, color: '#046C4E' }}>🟢 {group.available_count}</Text>
+                    </View>
+                  )}
+                  {group.borrowed_count > 0 && (
+                    <View style={[styles.badgeWaiting, { paddingHorizontal: 4 }]}>
+                      <Text style={{ fontSize: 10, color: '#B45309' }}>🔴 {group.borrowed_count}</Text>
+                    </View>
+                  )}
+                </View>
+
+                {group.copies_waiting > 0 && (
+                  <View style={[styles.badgeWaiting, { marginTop: 4 }]}>
+                    <Text style={styles.badgeWaitingText}>Chờ xếp: {group.copies_waiting}</Text>
+                  </View>
+                )}
               </TouchableOpacity>
             ))}
           </View>
