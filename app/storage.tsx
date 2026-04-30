@@ -247,10 +247,23 @@ export default function StorageAndShelves() {
           <Text style={styles.pageTitle}>Quản lý Kho & Sơ Đồ Kệ</Text>
           <Text style={styles.subtitle}>Thiết kế 5 Khu x 3 Kệ x 3 Tầng — Tối đa 50 cuốn/ngăn.</Text>
         </View>
-        <TouchableOpacity style={styles.createBtn} onPress={fetchData}>
-          <Ionicons name="refresh" size={20} color="#fff" style={{ marginRight: 8 }} />
-          <Text style={{ color: '#fff', fontWeight: 'bold' }}>Làm mới kho</Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', gap: 10 }}>
+          <TouchableOpacity 
+            style={[styles.createBtn, { backgroundColor: '#10B981' }]} 
+            onPress={async () => {
+              // Mock trigger for file selection logic
+              Alert.alert("Tính năng Import", "Vui lòng chọn file CSV/Excel từ thiết bị.");
+              // In a real app, use DocumentPicker. Here I just provide the UI hook.
+            }}
+          >
+            <Ionicons name="cloud-upload" size={20} color="#fff" style={{ marginRight: 8 }} />
+            <Text style={{ color: '#fff', fontWeight: 'bold' }}>Nhập File (CSV/Excel)</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.createBtn} onPress={fetchData}>
+            <Ionicons name="refresh" size={20} color="#fff" style={{ marginRight: 8 }} />
+            <Text style={{ color: '#fff', fontWeight: 'bold' }}>Làm mới kho</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Search & Category Bar */}
