@@ -21,12 +21,22 @@ export default function StorageAndShelves() {
 
   // Filter tab
   const [activeFilter, setActiveFilter] = useState<"waiting" | "all">("waiting");
+  
+  // Search & Category states
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  const [categories, setCategories] = useState<any[]>([]);
 
   const fetchData = async () => {
     setLoading(true);
     setApiError(null);
     try {
-      const groupsRes = await fetch(`${BASE_URL}/api/books/title-groups`);
+      // Build URL with search and category
+      let url = `${BASE_URL}/api/books/title-groups?`;
+      if (searchQuery) url += `q=${encodeURIComponent(searchQuery)}&`;
+      if (selectedCategoryId) url += `category_id=${selectedCategoryId}&`;
+
+      const groupsRes = await fetch(url);
       const groupsResp = await groupsRes.json();
       
       if (!groupsRes.ok) {
@@ -38,6 +48,13 @@ export default function StorageAndShelves() {
       
       const locsData = await getLocations();
       setLocations(Array.isArray(locsData) ? locsData : []);
+
+      // Fetch categories
+      const catRes = await fetch(`${BASE_URL}/api/categories`);
+      if (catRes.ok) {
+        const catData = await catRes.json();
+        setCategories(catData);
+      }
     } catch (error) {
       console.error("Lỗi tải dữ liệu:", error);
       setApiError('Không thể kết nối đến máy chủ. Hãy kiểm tra kết nối mạng hoặc thử lại sau.');
@@ -48,7 +65,7 @@ export default function StorageAndShelves() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [searchQuery, selectedCategoryId]);
 
   const handleAssignGroup = async () => {
     if (!selectedGroup || !selectedLocationId) {
@@ -236,6 +253,40 @@ export default function StorageAndShelves() {
         </TouchableOpacity>
       </View>
 
+      {/* Search & Category Bar */}
+      <View style={{ flexDirection: 'row', gap: 15, marginBottom: 20 }}>
+        <View style={{ flex: 2, flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 12, paddingHorizontal: 15, borderWidth: 1, borderColor: '#E5E7EB' }}>
+          <Ionicons name="search-outline" size={20} color="#9CA3AF" />
+          <TextInput
+            style={{ flex: 1, paddingVertical: 12, marginLeft: 10, fontSize: 14 }}
+            placeholder="Tìm theo tên sách, tác giả hoặc ISBN..."
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
+
+        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 12, paddingHorizontal: 15, borderWidth: 1, borderColor: '#E5E7EB' }}>
+          <Ionicons name="filter-outline" size={20} color="#9CA3AF" />
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ alignItems: 'center', paddingLeft: 10 }}>
+            <TouchableOpacity 
+              style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, backgroundColor: selectedCategoryId === null ? '#80A1BA' : 'transparent' }}
+              onPress={() => setSelectedCategoryId(null)}
+            >
+              <Text style={{ color: selectedCategoryId === null ? '#fff' : '#4B5563', fontSize: 13, fontWeight: '600' }}>Tất cả</Text>
+            </TouchableOpacity>
+            {categories.map(cat => (
+              <TouchableOpacity 
+                key={cat.category_id}
+                style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, backgroundColor: selectedCategoryId === cat.category_id ? '#80A1BA' : 'transparent' }}
+                onPress={() => setSelectedCategoryId(cat.category_id)}
+              >
+                <Text style={{ color: selectedCategoryId === cat.category_id ? '#fff' : '#4B5563', fontSize: 13, fontWeight: '600' }}>{cat.name}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      </View>
+
       {/* Filter tabs (Giữ nguyên logic chờ xếp kệ) */}
       <View style={styles.filterRow}>
         <TouchableOpacity style={[styles.filterBtn, activeFilter === "waiting" && styles.filterBtnActive]} onPress={() => setActiveFilter("waiting")}>
@@ -266,6 +317,7 @@ export default function StorageAndShelves() {
                   <View style={styles.bookImagePlaceholder}><Ionicons name="book-outline" size={30} color="#9CA3AF" /></View>
                 )}
                 <Text style={styles.bookTitle} numberOfLines={1}>{group.title}</Text>
+                <Text style={{ fontSize: 11, color: '#6B7280', marginTop: 2 }}>✍️ {group.author || 'Chưa cập nhật'}</Text>
                 
                 <View style={{ flexDirection: 'row', gap: 4, marginTop: 4, flexWrap: 'wrap' }}>
                   <View style={[styles.badgeTotal, { paddingHorizontal: 4 }]}>
