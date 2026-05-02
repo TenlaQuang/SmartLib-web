@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, Text, View, ScrollView, Image, ActivityIndicator, TouchableOpacity, Modal, TextInput, Alert } from "react-native";
+import { StyleSheet, Text, View, ScrollView, Image, ActivityIndicator, TouchableOpacity, Modal, TextInput, Alert, Platform } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { getLocations, createLocation, deleteLocation, BASE_URL } from "../services/api";
+import * as DocumentPicker from 'expo-document-picker';
 
 export default function StorageAndShelves() {
   const [titleGroups, setTitleGroups] = useState<any[]>([]);
@@ -122,6 +123,58 @@ export default function StorageAndShelves() {
     }
   };
 
+  const handleImportCSV = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ["text/comma-separated-values", "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"],
+      });
+
+      if (result.canceled) return;
+
+      const file = result.assets[0];
+      setLoading(true);
+
+      const formData = new FormData();
+      
+      if (Platform.OS === 'web') {
+        // Đối với Web, cần fetch uri để biến thành Blob
+        const res = await fetch(file.uri);
+        const blob = await res.blob();
+        formData.append('file', blob, file.name);
+      } else {
+        // Đối với Native (Android/iOS)
+        // @ts-ignore
+        formData.append('file', {
+          uri: file.uri,
+          name: file.name,
+          type: file.mimeType || 'text/csv',
+        });
+      }
+
+      const response = await fetch(`${BASE_URL}/api/books/import-csv`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        Alert.alert("Thành công! ✅", data.message);
+        fetchData(); // Tải lại sơ đồ kho để thấy sách mới
+      } else {
+        Alert.alert("Lỗi nhập file", data.detail || "Không thể xử lý file này.");
+      }
+    } catch (error) {
+      console.error("Lỗi Import:", error);
+      Alert.alert("Lỗi kết nối", "Không thể gửi file lên máy chủ.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleDeleteLocation = (id: number) => {
     Alert.alert("Xác nhận", "Kệ sách sẽ bị xóa. Sách trên kệ sẽ trở về Kệ Chờ.", [
       { text: "Bỏ qua", style: "cancel" },
@@ -195,20 +248,11 @@ export default function StorageAndShelves() {
                                       <Ionicons name="book" size={20} color="#9CA3AF" />
                                     )}
                                   </View>
-                                  {/* Số lượng bản sao */}
-                                  <View style={{ flexDirection: 'row', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
-                                    <View style={styles.badgeTotal}>
-                                      <Text style={styles.badgeTotalText}>Tổng: {ub.total_copies}</Text>
-                                    </View>
-                                    {ub.available_count > 0 && (
-                                      <View style={styles.badgeDone}>
-                                        <Text style={styles.badgeDoneText}>🟢 Sẵn có: {ub.available_count}</Text>
-                                      </View>
-                                    )}
+                                  {/* Hiển thị số lượng có sẵn bên dưới */}
+                                  <View style={styles.bookInfoBelow}>
+                                    <Text style={styles.availableCountText}>SL: {ub.available_count}</Text>
                                     {ub.borrowed_count > 0 && (
-                                      <View style={styles.badgeWaiting}>
-                                        <Text style={styles.badgeWaitingText}>🔴 Đang mượn: {ub.borrowed_count}</Text>
-                                      </View>
+                                      <Text style={styles.borrowedCountText}>(+{ub.borrowed_count} mượn)</Text>
                                     )}
                                   </View>
                                 </View>
@@ -250,11 +294,7 @@ export default function StorageAndShelves() {
         <View style={{ flexDirection: 'row', gap: 10 }}>
           <TouchableOpacity 
             style={[styles.createBtn, { backgroundColor: '#10B981' }]} 
-            onPress={async () => {
-              // Mock trigger for file selection logic
-              Alert.alert("Tính năng Import", "Vui lòng chọn file CSV/Excel từ thiết bị.");
-              // In a real app, use DocumentPicker. Here I just provide the UI hook.
-            }}
+            onPress={handleImportCSV}
           >
             <Ionicons name="cloud-upload" size={20} color="#fff" style={{ marginRight: 8 }} />
             <Text style={{ color: '#fff', fontWeight: 'bold' }}>Nhập File (CSV/Excel)</Text>
@@ -443,12 +483,14 @@ const styles = StyleSheet.create({
   capacityText: { fontSize: 10, color: '#9CA3AF' },
   shelfLineContainer: { flex: 1 },
   booksOnLevel: { flexDirection: 'row', flexWrap: 'wrap', gap: 20, paddingBottom: 5, paddingLeft: 10 },
-  virtualBook: { alignItems: 'center', width: 60 },
-  bookCoverMini: { width: 50, height: 70, backgroundColor: '#fff', borderRadius: 4, elevation: 3, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 4, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#E5E7EB' },
+  virtualBook: { alignItems: 'center', width: 80, marginBottom: 5 },
+  bookCoverMini: { width: 55, height: 80, backgroundColor: '#fff', borderRadius: 4, elevation: 5, shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 4, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#E5E7EB' },
   miniCoverImage: { width: '100%', height: '100%', borderRadius: 4 },
-  bookCountLabel: { fontSize: 11, fontWeight: 'bold', color: '#4B5563', marginTop: 6 },
-  shelfLine: { height: 4, backgroundColor: '#374151', borderRadius: 2, width: '100%' },
-  emptyLevelText: { fontSize: 12, color: '#D1D5DB', fontStyle: 'italic', marginBottom: 5 },
+  bookInfoBelow: { marginTop: 8, alignItems: 'center' },
+  availableCountText: { fontSize: 12, fontWeight: 'bold', color: '#111827' },
+  borrowedCountText: { fontSize: 10, color: '#9CA3AF', marginTop: 2 },
+  shelfLine: { height: 6, backgroundColor: '#4B5563', borderRadius: 3, width: '100%', marginTop: 5 },
+  emptyLevelText: { fontSize: 12, color: '#D1D5DB', fontStyle: 'italic', marginBottom: 10, paddingLeft: 10 },
 
   // Modal
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "center", alignItems: "center" },
