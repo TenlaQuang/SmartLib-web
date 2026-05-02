@@ -3,6 +3,7 @@ import { StyleSheet, Text, View, ScrollView, Image, ActivityIndicator, Touchable
 import { Ionicons } from "@expo/vector-icons";
 import { getLocations, createLocation, deleteLocation, BASE_URL } from "../services/api";
 import * as DocumentPicker from 'expo-document-picker';
+import axios from 'axios';
 
 export default function StorageAndShelves() {
   const [titleGroups, setTitleGroups] = useState<any[]>([]);
