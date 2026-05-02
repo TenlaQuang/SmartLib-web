@@ -152,21 +152,17 @@ export default function StorageAndShelves() {
         });
       }
 
-      const response = await fetch(`${BASE_URL}/api/books/import-csv`, {
-        method: 'POST',
-        body: formData,
+      const response = await axios.post(`${BASE_URL}/api/books/import-csv`, formData, {
         headers: {
-          'Accept': 'application/json',
           'Content-Type': 'multipart/form-data',
         },
       });
 
-      const data = await response.json();
-      if (response.ok) {
-        Alert.alert("Thành công! ✅", data.message);
-        fetchData(); // Tải lại sơ đồ kho để thấy sách mới
+      if (response.status === 200) {
+        Alert.alert("Thành công! ✅", response.data.message);
+        fetchData();
       } else {
-        Alert.alert("Lỗi nhập file", data.detail || "Không thể xử lý file này.");
+        Alert.alert("Lỗi nhập file", "Không thể xử lý file này.");
       }
     } catch (error) {
       console.error("Lỗi Import:", error);
