@@ -125,8 +125,10 @@ export default function StorageAndShelves() {
 
   const handleImportCSV = async () => {
     try {
+      console.log("Đang mở cửa sổ chọn file...");
       const result = await DocumentPicker.getDocumentAsync({
-        type: ["text/comma-separated-values", "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"],
+        type: "*/*", // Cho phép chọn tất cả các loại file để tránh bị trình duyệt chặn
+        copyToCacheDirectory: true
       });
 
       if (result.canceled) return;
@@ -137,10 +139,9 @@ export default function StorageAndShelves() {
       const formData = new FormData();
       
       if (Platform.OS === 'web') {
-        // Đối với Web, cần fetch uri để biến thành Blob
-        const res = await fetch(file.uri);
-        const blob = await res.blob();
-        formData.append('file', blob, file.name);
+        // Ưu tiên dùng đối tượng file gốc nếu có, nếu không mới fetch uri
+        const fileToUpload = file.file || (await (await fetch(file.uri)).blob());
+        formData.append('file', fileToUpload, file.name);
       } else {
         // Đối với Native (Android/iOS)
         // @ts-ignore
