@@ -28,12 +28,12 @@ export default function StorageAndShelves() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [categories, setCategories] = useState<any[]>([]);
+  const [selectedZone, setSelectedZone] = useState<string | null>(null);
 
   const fetchData = async () => {
     setLoading(true);
     setApiError(null);
     try {
-      // Build URL with search and category
       let url = `${BASE_URL}/api/books/title-groups?`;
       if (searchQuery) url += `q=${encodeURIComponent(searchQuery)}&`;
       if (selectedCategoryId) url += `category_id=${selectedCategoryId}&`;
@@ -42,7 +42,7 @@ export default function StorageAndShelves() {
       const groupsResp = await groupsRes.json();
       
       if (!groupsRes.ok) {
-        setApiError(`API lỗi ${groupsRes.status}: ${groupsResp?.detail || 'Máy chủ đang khởi động lại, vui lòng thử lại sau 1 phút.'}`);
+        setApiError(`API lỗi ${groupsRes.status}: ${groupsResp?.detail || 'Máy chủ đang khởi động lại...'}`);
         setTitleGroups([]);
       } else {
         setTitleGroups(Array.isArray(groupsResp) ? groupsResp : []);
@@ -51,7 +51,6 @@ export default function StorageAndShelves() {
       const locsData = await getLocations();
       setLocations(Array.isArray(locsData) ? locsData : []);
 
-      // Fetch categories
       const catRes = await fetch(`${BASE_URL}/api/categories`);
       if (catRes.ok) {
         const catData = await catRes.json();
@@ -59,7 +58,7 @@ export default function StorageAndShelves() {
       }
     } catch (error) {
       console.error("Lỗi tải dữ liệu:", error);
-      setApiError('Không thể kết nối đến máy chủ. Hãy kiểm tra kết nối mạng hoặc thử lại sau.');
+      setApiError('Không thể kết nối đến máy chủ.');
     } finally {
       setLoading(false);
     }
@@ -83,7 +82,7 @@ export default function StorageAndShelves() {
       });
       const data = await resp.json();
       if (resp.ok) {
-        Alert.alert("Thành công! ✅", data.message);
+        Alert.alert("Thành công", data.message);
         setIsAssignModalOpen(false);
         setSelectedGroup(null);
         setSelectedLocationId(null);
@@ -98,345 +97,178 @@ export default function StorageAndShelves() {
     }
   };
 
-  const handleBulkCreate = async () => {
-    if (!bulkLocation.zone_name || !bulkLocation.shelf_prefix) {
-      Alert.alert("Thiếu thông tin", "Vui lòng nhập Tên Khu Vực và Tiền Tố Kệ.");
-      return;
-    }
-    const numShelves = parseInt(bulkLocation.num_shelves) || 1;
-    const numLevels = parseInt(bulkLocation.num_levels) || 1;
-    try {
-      setLoading(true);
-      const promises = [];
-      for (let s = 1; s <= numShelves; s++) {
-        for (let l = 1; l <= numLevels; l++) {
-          promises.push(createLocation({ zone_name: bulkLocation.zone_name, shelf_id: `${bulkLocation.shelf_prefix} ${s}`, level_number: l }));
-        }
-      }
-      await Promise.all(promises);
-      Alert.alert("Thành công", `Đã tạo ${promises.length} vị trí kệ!`);
-      setIsBulkCreateModalOpen(false);
-      setBulkLocation({ zone_name: "", shelf_prefix: "", num_shelves: "1", num_levels: "1" });
-      fetchData();
-    } catch (err) {
-      Alert.alert("Lỗi", "Không thể tạo kệ hàng loạt.");
-      setLoading(false);
-    }
-  };
-
   const handleImportCSV = async () => {
     try {
-      console.log("Đang mở cửa sổ chọn file...");
-      const result = await DocumentPicker.getDocumentAsync({
-        type: "*/*", // Cho phép chọn tất cả các loại file để tránh bị trình duyệt chặn
-        copyToCacheDirectory: true
-      });
-
+      const result = await DocumentPicker.getDocumentAsync({ type: "*/*" });
       if (result.canceled) return;
 
       const file = result.assets[0];
-      setLoading(true);
-
       const formData = new FormData();
       
+      // Xử lý đúng chuẩn cho Expo Web
       if (Platform.OS === 'web') {
-        // Ưu tiên dùng đối tượng file gốc nếu có, nếu không mới fetch uri
-        const fileToUpload = file.file || (await (await fetch(file.uri)).blob());
-        formData.append('file', fileToUpload, file.name);
+        const res = await fetch(file.uri);
+        const blob = await res.blob();
+        formData.append('file', blob, file.name);
       } else {
-        // Đối với Native (Android/iOS)
-        // @ts-ignore
         formData.append('file', {
           uri: file.uri,
           name: file.name,
-          type: file.mimeType || 'text/csv',
-        });
+          type: file.mimeType || 'text/csv'
+        } as any);
       }
 
-      const response = await axios.post(`${BASE_URL}/api/books/import-csv`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+      setLoading(true);
+      // Sử dụng fetch gốc để trình duyệt tự tạo Header Boundary (tránh lỗi 422 của Axios)
+      const res = await fetch(`${BASE_URL}/api/books/import-csv`, {
+        method: 'POST',
+        body: formData,
       });
-
-      if (response.status === 200) {
-        Alert.alert("Thành công! ✅", response.data.message);
-        fetchData();
-      } else {
-        Alert.alert("Lỗi nhập file", "Không thể xử lý file này.");
+      
+      if (!res.ok) {
+        throw new Error("Tải file thất bại (422/500)");
       }
-    } catch (error) {
-      console.error("Lỗi Import:", error);
-      Alert.alert("Lỗi kết nối", "Không thể gửi file lên máy chủ.");
+      
+      const data = await res.json();
+      Alert.alert("Thành công", data.message);
+      fetchData();
+    } catch (error: any) {
+      Alert.alert("Lỗi Import", error.response?.data?.detail || "Không thể import file.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDeleteLocation = (id: number) => {
-    Alert.alert("Xác nhận", "Kệ sách sẽ bị xóa. Sách trên kệ sẽ trở về Kệ Chờ.", [
-      { text: "Bỏ qua", style: "cancel" },
-      {
-        text: "Xóa Kệ", style: "destructive",
-        onPress: async () => {
-          try { await deleteLocation(id); fetchData(); }
-          catch { Alert.alert("Lỗi", "Không thể xóa kệ."); }
-        }
-      }
-    ]);
-  };
-
-  const displayGroups = activeFilter === "waiting"
-    ? titleGroups.filter(g => g.copies_waiting > 0)
-    : titleGroups;
-
-  if (loading) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: '#FFF7DD' }}>
-        <ActivityIndicator size="large" color="#80A1BA" />
-        <Text style={{ marginTop: 12, color: '#6B7280', fontSize: 14 }}>Đang tải dữ liệu từ máy chủ...</Text>
-      </View>
-    );
-  }
-
   const renderVirtualMap = () => {
-    // Nhóm locations theo Khu vực (Zone)
     const zones = Array.from(new Set(locations.map(l => l.zone_name))).sort();
+    if (!selectedZone && zones.length > 0) setSelectedZone(zones[0]);
 
     return (
-      <View style={{ marginTop: 30 }}>
-        <Text style={[styles.sectionTitle, { marginBottom: 20 }]}>🗺️ Sơ đồ Kho sách ảo (Virtual Library Map)</Text>
-        
-        {zones.map(zone => (
-          <View key={zone} style={styles.zoneContainer}>
-            <View style={styles.zoneHeader}>
-              <Ionicons name="map-outline" size={20} color="#fff" />
-              <Text style={styles.zoneHeaderText}>{zone}</Text>
-            </View>
+      <View style={{ marginTop: 20 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 15 }}>
+          {zones.map(zone => (
+            <TouchableOpacity 
+              key={zone}
+              style={[styles.zoneTab, selectedZone === zone && styles.zoneTabActive]}
+              onPress={() => setSelectedZone(zone)}
+            >
+              <Text style={[styles.zoneTabText, selectedZone === zone && styles.zoneTabTextActive]}>{zone}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
 
-            <View style={styles.zoneContent}>
-              {/* Nhóm theo Kệ trong mỗi Khu */}
-              {Array.from(new Set(locations.filter(l => l.zone_name === zone).map(l => l.shelf_id))).sort().map(shelfId => (
-                <View key={shelfId} style={styles.shelfContainer}>
-                  <Text style={styles.shelfLabel}>{shelfId}</Text>
+        {locations.filter(l => l.zone_name === selectedZone)
+          .reduce((acc: any[], loc) => {
+            const shelf = acc.find(s => s.shelf_id === loc.shelf_id);
+            if (shelf) shelf.levels.push(loc);
+            else acc.push({ shelf_id: loc.shelf_id, levels: [loc] });
+            return acc;
+          }, [])
+          .sort((a, b) => a.shelf_id.localeCompare(b.shelf_id))
+          .map(shelf => (
+            <View key={shelf.shelf_id} style={styles.shelfContainer}>
+              <View style={styles.shelfHeader}>
+                <Ionicons name="layers-outline" size={18} color="#80A1BA" />
+                <Text style={styles.shelfTitle}>{shelf.shelf_id}</Text>
+              </View>
+              
+              {shelf.levels.sort((a: any, b: any) => b.level_number - a.level_number).map((loc: any) => (
+                <View key={loc.location_id} style={styles.levelRow}>
+                  <View style={styles.levelInfo}>
+                    <Text style={styles.levelLabel}>Tầng {loc.level_number}</Text>
+                    <Text style={styles.levelCount}>{loc.book_count} cuốn</Text>
+                  </View>
                   
-                  {/* Các tầng (Hàng) trong Kệ */}
-                  {locations.filter(l => l.zone_name === zone && l.shelf_id === shelfId)
-                    .sort((a, b) => b.level_number - a.level_number) // Tầng cao hiện ở trên
-                    .map(loc => (
-                      <View key={loc.location_id} style={styles.levelRow}>
-                        <View style={styles.levelLabelContainer}>
-                          <Text style={styles.levelLabel}>Hàng {loc.level_number}</Text>
-                          <Text style={styles.capacityText}>{loc.book_count}/{loc.max_capacity}</Text>
-                        </View>
-                        
-                        <View style={styles.shelfLineContainer}>
-                          {/* Sách trên kệ */}
-                          <View style={styles.booksOnLevel}>
-                            {loc.unique_books && loc.unique_books.length > 0 ? (
-                              loc.unique_books.map((ub: any, idx: number) => (
-                                <View key={idx} style={styles.virtualBook}>
-                                  <View style={styles.bookCoverMini}>
-                                    {ub.image_url ? (
-                                      <Image 
-                                        source={{ uri: ub.image_url.startsWith('http') ? ub.image_url : BASE_URL + ub.image_url }} 
-                                        style={styles.miniCoverImage} 
-                                      />
-                                    ) : (
-                                      <Ionicons name="book" size={20} color="#9CA3AF" />
-                                    )}
-                                  </View>
-                                  {/* Hiển thị số lượng có sẵn bên dưới */}
-                                  <View style={styles.bookInfoBelow}>
-                                    <Text style={styles.availableCountText}>SL: {ub.available_count}</Text>
-                                    {ub.borrowed_count > 0 && (
-                                      <Text style={styles.borrowedCountText}>(+{ub.borrowed_count} mượn)</Text>
-                                    )}
-                                  </View>
-                                </View>
-                              ))
-                            ) : (
-                              <Text style={styles.emptyLevelText}>Trống</Text>
-                            )}
+                  <View style={styles.shelfPlank}>
+                    <View style={styles.booksOnShelf}>
+                      {loc.unique_books && loc.unique_books.length > 0 ? (
+                        loc.unique_books.map((ub: any, idx: number) => (
+                          <View key={idx} style={styles.bookItem}>
+                            <View style={styles.bookCover}>
+                              {ub.image_url ? (
+                                <Image source={{ uri: ub.image_url.startsWith('http') ? ub.image_url : BASE_URL + ub.image_url }} style={styles.coverImg} />
+                              ) : (
+                                <Ionicons name="book" size={20} color="#9CA3AF" />
+                              )}
+                            </View>
+                            <Text style={styles.bookQty}>SL: {ub.total_copies}</Text>
                           </View>
-                          <View style={styles.shelfLine} />
-                        </View>
-                      </View>
-                    ))}
+                        ))
+                      ) : (
+                        <Text style={styles.emptyShelf}>Trống</Text>
+                      )}
+                    </View>
+                    <View style={styles.shelfWood} />
+                  </View>
                 </View>
               ))}
             </View>
-          </View>
-        ))}
+          ))}
       </View>
     );
   };
 
-  if (loading) {
+  if (loading && titleGroups.length === 0) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: '#F9FAFB' }}>
+      <View style={styles.loadingCenter}>
         <ActivityIndicator size="large" color="#80A1BA" />
-        <Text style={{ marginTop: 12, color: '#6B7280', fontSize: 14 }}>Đang tải sơ đồ kho...</Text>
+        <Text style={{ marginTop: 10, color: '#6B7280' }}>Đang tải dữ liệu...</Text>
       </View>
     );
   }
 
+  const displayGroups = activeFilter === "waiting" ? titleGroups.filter(g => g.copies_waiting > 0) : titleGroups;
+
   return (
     <ScrollView style={styles.container}>
-      {/* Header */}
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+      <View style={styles.header}>
         <View>
-          <Text style={styles.pageTitle}>Quản lý Kho & Sơ Đồ Kệ</Text>
-          <Text style={styles.subtitle}>Thiết kế 5 Khu x 3 Kệ x 3 Tầng — Tối đa 50 cuốn/ngăn.</Text>
+          <Text style={styles.pageTitle}>Sơ đồ Kho sách</Text>
+          <Text style={styles.subtitle}>Quản lý vị trí và số lượng thực tế trên kệ.</Text>
         </View>
-        <View style={{ flexDirection: 'row', gap: 10 }}>
-          <TouchableOpacity 
-            style={[styles.createBtn, { backgroundColor: '#10B981' }]} 
-            onPress={handleImportCSV}
-          >
-            <Ionicons name="cloud-upload" size={20} color="#fff" style={{ marginRight: 8 }} />
-            <Text style={{ color: '#fff', fontWeight: 'bold' }}>Nhập File (CSV/Excel)</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.createBtn} onPress={fetchData}>
-            <Ionicons name="refresh" size={20} color="#fff" style={{ marginRight: 8 }} />
-            <Text style={{ color: '#fff', fontWeight: 'bold' }}>Làm mới kho</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Search & Category Bar */}
-      <View style={{ flexDirection: 'row', gap: 15, marginBottom: 20 }}>
-        <View style={{ flex: 2, flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 12, paddingHorizontal: 15, borderWidth: 1, borderColor: '#E5E7EB' }}>
-          <Ionicons name="search-outline" size={20} color="#9CA3AF" />
-          <TextInput
-            style={{ flex: 1, paddingVertical: 12, marginLeft: 10, fontSize: 14 }}
-            placeholder="Tìm theo tên sách, tác giả hoặc ISBN..."
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-        </View>
-
-        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 12, paddingHorizontal: 15, borderWidth: 1, borderColor: '#E5E7EB' }}>
-          <Ionicons name="filter-outline" size={20} color="#9CA3AF" />
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ alignItems: 'center', paddingLeft: 10 }}>
-            <TouchableOpacity 
-              style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, backgroundColor: selectedCategoryId === null ? '#80A1BA' : 'transparent' }}
-              onPress={() => setSelectedCategoryId(null)}
-            >
-              <Text style={{ color: selectedCategoryId === null ? '#fff' : '#4B5563', fontSize: 13, fontWeight: '600' }}>Tất cả</Text>
-            </TouchableOpacity>
-            {categories.map(cat => (
-              <TouchableOpacity 
-                key={cat.category_id}
-                style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, backgroundColor: selectedCategoryId === cat.category_id ? '#80A1BA' : 'transparent' }}
-                onPress={() => setSelectedCategoryId(cat.category_id)}
-              >
-                <Text style={{ color: selectedCategoryId === cat.category_id ? '#fff' : '#4B5563', fontSize: 13, fontWeight: '600' }}>{cat.name}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-      </View>
-
-      {/* Filter tabs (Giữ nguyên logic chờ xếp kệ) */}
-      <View style={styles.filterRow}>
-        <TouchableOpacity style={[styles.filterBtn, activeFilter === "waiting" && styles.filterBtnActive]} onPress={() => setActiveFilter("waiting")}>
-          <Ionicons name="time-outline" size={16} color={activeFilter === "waiting" ? "#fff" : "#6B7280"} />
-          <Text style={[styles.filterText, activeFilter === "waiting" && styles.filterTextActive]}>
-            Sách chờ xếp ({titleGroups.filter(g => g.copies_waiting > 0).length})
-          </Text>
+        <TouchableOpacity style={styles.importBtn} onPress={handleImportCSV}>
+          <Ionicons name="cloud-upload" size={20} color="#fff" />
+          <Text style={styles.importBtnText}>Nhập File</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.filterBtn, activeFilter === "all" && styles.filterBtnActive]} onPress={() => setActiveFilter("all")}>
-          <Ionicons name="grid-outline" size={16} color={activeFilter === "all" ? "#fff" : "#6B7280"} />
-          <Text style={[styles.filterText, activeFilter === "all" && styles.filterTextActive]}>
-            Xem Sơ Đồ Kho
-          </Text>
+      </View>
+
+      <View style={styles.tabRow}>
+        <TouchableOpacity style={[styles.tab, activeFilter === "waiting" && styles.tabActive]} onPress={() => setActiveFilter("waiting")}>
+          <Text style={[styles.tabText, activeFilter === "waiting" && styles.tabTextActive]}>Chờ xếp kệ ({titleGroups.filter(g => g.copies_waiting > 0).length})</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.tab, activeFilter === "all" && styles.tabActive]} onPress={() => setActiveFilter("all")}>
+          <Text style={[styles.tabText, activeFilter === "all" && styles.tabTextActive]}>Sơ đồ kệ sách</Text>
         </TouchableOpacity>
       </View>
 
       {activeFilter === "waiting" ? (
-        <View style={styles.waitingZone}>
-          <Text style={styles.sectionTitle}>📦 Sách Chờ Lên Kệ</Text>
-          <Text style={styles.sectionDesc}>Bấm vào sách để chọn vị trí xếp lên kệ.</Text>
-          <View style={styles.booksGrid}>
-            {displayGroups.length === 0 && <Text style={{ color: "#6B7280" }}>🎉 Đã xếp hết sách!</Text>}
-            {displayGroups.map((group, idx) => (
-              <TouchableOpacity key={idx} style={styles.bookCard} onPress={() => { setSelectedGroup(group); setIsAssignModalOpen(true); }}>
-                {group.image_url ? (
-                  <Image source={{ uri: group.image_url.startsWith('http') ? group.image_url : BASE_URL + group.image_url }} style={styles.bookImage} />
-                ) : (
-                  <View style={styles.bookImagePlaceholder}><Ionicons name="book-outline" size={30} color="#9CA3AF" /></View>
-                )}
-                <Text style={styles.bookTitle} numberOfLines={1}>{group.title}</Text>
-                <Text style={{ fontSize: 11, color: '#6B7280', marginTop: 2 }}>✍️ {group.author || 'Chưa cập nhật'}</Text>
-                
-                <View style={{ flexDirection: 'row', gap: 4, marginTop: 4, flexWrap: 'wrap' }}>
-                  <View style={[styles.badgeTotal, { paddingHorizontal: 4 }]}>
-                    <Text style={{ fontSize: 10, color: '#0369A1' }}>Tổng: {group.total_copies}</Text>
-                  </View>
-                  {group.available_count > 0 && (
-                    <View style={[styles.badgeDone, { paddingHorizontal: 4 }]}>
-                      <Text style={{ fontSize: 10, color: '#046C4E' }}>🟢 {group.available_count}</Text>
-                    </View>
-                  )}
-                  {group.borrowed_count > 0 && (
-                    <View style={[styles.badgeWaiting, { paddingHorizontal: 4 }]}>
-                      <Text style={{ fontSize: 10, color: '#B45309' }}>🔴 {group.borrowed_count}</Text>
-                    </View>
-                  )}
-                </View>
-
-                {group.copies_waiting > 0 && (
-                  <View style={[styles.badgeWaiting, { marginTop: 4 }]}>
-                    <Text style={styles.badgeWaitingText}>Chờ xếp: {group.copies_waiting}</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            ))}
-          </View>
+        <View style={styles.grid}>
+          {displayGroups.map((group, idx) => (
+            <TouchableOpacity key={idx} style={styles.card} onPress={() => { setSelectedGroup(group); setIsAssignModalOpen(true); }}>
+              <Image source={{ uri: group.image_url }} style={styles.cardImg} />
+              <Text style={styles.cardTitle} numberOfLines={1}>{group.title}</Text>
+              <View style={styles.cardBadge}>
+                <Text style={styles.cardBadgeText}>Chờ: {group.copies_waiting}</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
         </View>
       ) : renderVirtualMap()}
 
-      <View style={{ height: 100 }} />
-
-      {/* Modal Xếp kệ */}
-      <Modal visible={isAssignModalOpen} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Chọn vị trí trên kệ</Text>
-              <TouchableOpacity onPress={() => setIsAssignModalOpen(false)}><Ionicons name="close" size={24} color="#6B7280" /></TouchableOpacity>
-            </View>
-            <Text style={{ marginBottom: 15 }}>Sách: <Text style={{ fontWeight: 'bold' }}>{selectedGroup?.title}</Text> ({selectedGroup?.copies_waiting} cuốn)</Text>
-            
-            <ScrollView style={{ maxHeight: 400 }}>
-              {locations.map(loc => {
-                const isFull = loc.book_count >= loc.max_capacity;
-                return (
-                  <TouchableOpacity
-                    key={loc.location_id}
-                    disabled={isFull}
-                    style={[styles.locationItem, selectedLocationId === loc.location_id && styles.locationItemActive, isFull && { opacity: 0.5 }]}
-                    onPress={() => setSelectedLocationId(loc.location_id)}
-                  >
-                    <View style={{ flex: 1 }}>
-                      <Text style={[selectedLocationId === loc.location_id && { color: '#fff', fontWeight: 'bold' }]}>
-                        {loc.zone_name} - {loc.shelf_id} - Tầng {loc.level_number}
-                      </Text>
-                      <Text style={[{ fontSize: 12, color: '#6B7280' }, selectedLocationId === loc.location_id && { color: '#fff' }]}>
-                        Sức chứa: {loc.book_count}/{loc.max_capacity} cuốn {isFull && "(ĐÃ ĐẦY)"}
-                      </Text>
-                    </View>
-                    {selectedLocationId === loc.location_id && <Ionicons name="checkmark-circle" size={20} color="#fff" />}
-                  </TouchableOpacity>
-                );
-              })}
+      <Modal visible={isAssignModalOpen} transparent animationType="slide">
+        <View style={styles.modalBg}>
+          <View style={styles.modalMain}>
+            <Text style={styles.modalTitle}>Xếp kệ: {selectedGroup?.title}</Text>
+            <ScrollView style={{ maxHeight: 300, marginVertical: 15 }}>
+              {locations.map(loc => (
+                <TouchableOpacity key={loc.location_id} style={[styles.locPick, selectedLocationId === loc.location_id && styles.locPickActive]} onPress={() => setSelectedLocationId(loc.location_id)}>
+                  <Text style={selectedLocationId === loc.location_id && {color: '#fff'}}>{loc.zone_name} - {loc.shelf_id} - Tầng {loc.level_number} ({loc.book_count}/{loc.max_capacity})</Text>
+                </TouchableOpacity>
+              ))}
             </ScrollView>
-
-            <View style={styles.modalFooter}>
-              <TouchableOpacity style={styles.saveBtn} onPress={handleAssignGroup} disabled={submitting}>
-                <Text style={{ color: '#fff', fontWeight: 'bold' }}>Xác Nhận Xếp Lên Kệ</Text>
-              </TouchableOpacity>
+            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 10 }}>
+              <TouchableOpacity style={styles.cancelBtn} onPress={() => setIsAssignModalOpen(false)}><Text>Hủy</Text></TouchableOpacity>
+              <TouchableOpacity style={styles.confirmBtn} onPress={handleAssignGroup}><Text style={{color:'#fff'}}>Xác nhận</Text></TouchableOpacity>
             </View>
           </View>
         </View>
@@ -446,57 +278,48 @@ export default function StorageAndShelves() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: '#F9FAFB' },
-  pageTitle: { fontSize: 24, fontWeight: "bold", color: "#111827" },
-  subtitle: { fontSize: 13, color: "#6B7280", marginTop: 4 },
-  createBtn: { flexDirection: 'row', backgroundColor: '#80A1BA', paddingHorizontal: 15, paddingVertical: 10, borderRadius: 8, alignItems: 'center' },
-  
-  filterRow: { flexDirection: 'row', gap: 10, marginBottom: 20, marginTop: 10 },
-  filterBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E7EB' },
-  filterBtnActive: { backgroundColor: '#80A1BA', borderColor: '#80A1BA' },
-  filterText: { fontSize: 14, color: '#4B5563', fontWeight: '600' },
-  filterTextActive: { color: '#fff' },
-
-  waitingZone: { backgroundColor: '#fff', borderRadius: 16, padding: 20, borderWidth: 1, borderColor: '#E5E7EB' },
-  sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#111827' },
-  sectionDesc: { fontSize: 13, color: '#6B7280', marginBottom: 20, marginTop: 4 },
-  booksGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 16 },
-  bookCard: { width: 140, backgroundColor: '#F9FAFB', borderRadius: 12, padding: 8, borderWidth: 1, borderColor: '#E5E7EB' },
-  bookImage: { width: '100%', height: 160, borderRadius: 8 },
-  bookImagePlaceholder: { width: '100%', height: 160, borderRadius: 8, backgroundColor: '#E5E7EB', justifyContent: 'center', alignItems: 'center' },
-  bookTitle: { fontSize: 12, fontWeight: 'bold', color: '#1F2937', marginTop: 8 },
-  badgeWaiting: { backgroundColor: '#FEF3C7', paddingVertical: 2, paddingHorizontal: 6, borderRadius: 4, marginTop: 4, alignSelf: 'flex-start' },
-  badgeWaitingText: { color: '#B45309', fontSize: 10, fontWeight: 'bold' },
-
-  // Virtual Map Styles
-  zoneContainer: { marginBottom: 30, backgroundColor: '#fff', borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: '#E5E7EB' },
-  zoneHeader: { backgroundColor: '#80A1BA', padding: 15, flexDirection: 'row', alignItems: 'center', gap: 10 },
-  zoneHeaderText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
-  zoneContent: { padding: 20 },
-  shelfContainer: { marginBottom: 25 },
-  shelfLabel: { fontSize: 16, fontWeight: 'bold', color: '#374151', marginBottom: 15, backgroundColor: '#F3F4F6', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, alignSelf: 'flex-start' },
-  levelRow: { flexDirection: 'row', alignItems: 'flex-end', marginBottom: 20 },
-  levelLabelContainer: { width: 80, marginRight: 15, alignItems: 'flex-end' },
-  levelLabel: { fontSize: 13, fontWeight: 'bold', color: '#6B7280' },
-  capacityText: { fontSize: 10, color: '#9CA3AF' },
-  shelfLineContainer: { flex: 1 },
-  booksOnLevel: { flexDirection: 'row', flexWrap: 'wrap', gap: 20, paddingBottom: 5, paddingLeft: 10 },
-  virtualBook: { alignItems: 'center', width: 80, marginBottom: 5 },
-  bookCoverMini: { width: 55, height: 80, backgroundColor: '#fff', borderRadius: 4, elevation: 5, shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 4, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#E5E7EB' },
-  miniCoverImage: { width: '100%', height: '100%', borderRadius: 4 },
-  bookInfoBelow: { marginTop: 8, alignItems: 'center' },
-  availableCountText: { fontSize: 12, fontWeight: 'bold', color: '#111827' },
-  borrowedCountText: { fontSize: 10, color: '#9CA3AF', marginTop: 2 },
-  shelfLine: { height: 6, backgroundColor: '#4B5563', borderRadius: 3, width: '100%', marginTop: 5 },
-  emptyLevelText: { fontSize: 12, color: '#D1D5DB', fontStyle: 'italic', marginBottom: 10, paddingLeft: 10 },
-
-  // Modal
-  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "center", alignItems: "center" },
-  modalContent: { width: 500, backgroundColor: "#FFF", borderRadius: 16, padding: 24 },
-  modalHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 },
-  modalTitle: { fontSize: 18, fontWeight: "bold" },
-  locationItem: { flexDirection: 'row', padding: 15, borderBottomWidth: 1, borderColor: '#F3F4F6', alignItems: 'center' },
-  locationItemActive: { backgroundColor: '#80A1BA' },
-  modalFooter: { marginTop: 20, alignItems: 'flex-end' },
-  saveBtn: { backgroundColor: '#80A1BA', paddingHorizontal: 20, paddingVertical: 12, borderRadius: 8 },
+  container: { flex: 1, backgroundColor: "#F9FAFB", padding: 15 },
+  loadingCenter: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  pageTitle: { fontSize: 22, fontWeight: 'bold', color: '#111827' },
+  subtitle: { fontSize: 13, color: '#6B7280' },
+  importBtn: { flexDirection: 'row', backgroundColor: '#80A1BA', padding: 10, borderRadius: 8, alignItems: 'center', gap: 8 },
+  importBtnText: { color: '#fff', fontWeight: 'bold' },
+  tabRow: { flexDirection: 'row', gap: 10, marginBottom: 15 },
+  tab: { paddingVertical: 8, paddingHorizontal: 15, borderRadius: 20, backgroundColor: '#E5E7EB' },
+  tabActive: { backgroundColor: '#80A1BA' },
+  tabText: { fontSize: 13, color: '#4B5563' },
+  tabTextActive: { color: '#fff', fontWeight: 'bold' },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  card: { width: '31%', backgroundColor: '#fff', padding: 8, borderRadius: 10, borderWidth: 1, borderColor: '#E5E7EB' },
+  cardImg: { width: '100%', height: 120, borderRadius: 6 },
+  cardTitle: { fontSize: 11, fontWeight: 'bold', marginTop: 5 },
+  cardBadge: { backgroundColor: '#FEF3C7', padding: 2, borderRadius: 4, marginTop: 4 },
+  cardBadgeText: { color: '#B45309', fontSize: 10, textAlign: 'center' },
+  zoneTab: { paddingHorizontal: 15, paddingVertical: 8, borderRadius: 8, marginRight: 10, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E7EB' },
+  zoneTabActive: { backgroundColor: '#80A1BA', borderColor: '#80A1BA' },
+  zoneTabText: { color: '#4B5563', fontWeight: 'bold' },
+  zoneTabTextActive: { color: '#fff' },
+  shelfContainer: { backgroundColor: '#fff', borderRadius: 12, padding: 15, marginBottom: 15, borderWidth: 1, borderColor: '#E5E7EB' },
+  shelfHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 15 },
+  shelfTitle: { fontSize: 16, fontWeight: 'bold', color: '#1F2937' },
+  levelRow: { flexDirection: 'row', marginBottom: 20 },
+  levelInfo: { width: 70, justifyContent: 'center' },
+  levelLabel: { fontSize: 12, fontWeight: 'bold', color: '#4B5563' },
+  levelCount: { fontSize: 10, color: '#9CA3AF' },
+  shelfPlank: { flex: 1 },
+  booksOnShelf: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, paddingBottom: 5 },
+  bookItem: { alignItems: 'center', width: 50 },
+  bookCover: { width: 45, height: 65, backgroundColor: '#fff', borderRadius: 3, elevation: 3, shadowOpacity: 0.1, borderWidth: 0.5, borderColor: '#E5E7EB' },
+  coverImg: { width: '100%', height: '100%', borderRadius: 3 },
+  bookQty: { fontSize: 9, fontWeight: 'bold', marginTop: 3, color: '#111827' },
+  shelfWood: { height: 4, backgroundColor: '#4B5563', borderRadius: 2 },
+  emptyShelf: { fontSize: 11, color: '#D1D5DB', fontStyle: 'italic' },
+  modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
+  modalMain: { width: '90%', backgroundColor: '#fff', borderRadius: 15, padding: 20 },
+  modalTitle: { fontSize: 18, fontWeight: 'bold' },
+  locPick: { padding: 12, borderBottomWidth: 1, borderColor: '#F3F4F6' },
+  locPickActive: { backgroundColor: '#80A1BA' },
+  cancelBtn: { padding: 10 },
+  confirmBtn: { backgroundColor: '#80A1BA', padding: 10, borderRadius: 8 }
 });

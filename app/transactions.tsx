@@ -44,7 +44,6 @@ const CustomDropdown = ({ selectedValue, items, onValueChange, placeholder, styl
 };
 
 export default function TransactionsAndLocations() {
-  const [books, setBooks] = useState<any[]>([]);
   const [locations, setLocations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -55,8 +54,7 @@ export default function TransactionsAndLocations() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [booksData, locsData] = await Promise.all([getBooks(), getLocations()]);
-        setBooks(booksData);
+        const locsData = await getLocations();
         setLocations(locsData);
 
         // Thiết lập giá trị mặc định cho Khu Vực và Tủ nếu có dữ liệu
@@ -159,9 +157,6 @@ export default function TransactionsAndLocations() {
              </Text>
           ) : (
              activeLevels.map((level) => {
-               // Lọc sách thuộc chính xác level này
-               const booksOnThisLevel = books.filter(b => b.location_id === level.location_id);
-               
                return (
                  <View key={level.location_id} style={styles.shelfContainer}>
                    {/* Tên hàng */}
@@ -171,27 +166,29 @@ export default function TransactionsAndLocations() {
 
                    {/* Khung chứa các quyển sách trên tầng kệ này */}
                    <View style={styles.booksRow}>
-                     {booksOnThisLevel.map((book: any) => (
-                       <View key={book.book_id} style={styles.bookWrapper}>
-                         {book.image_url ? (
-                           <Image 
-                             source={{ uri: book.image_url.startsWith('http') ? book.image_url : BASE_URL + book.image_url }} 
-                             style={styles.bookCover} 
-                             resizeMode="cover"
-                           />
-                         ) : (
-                           <View style={styles.bookPlaceholder}>
-                             <Text style={styles.bookSpineText} numberOfLines={2}>
-                               {book.title}
-                             </Text>
+                     {level.unique_books && level.unique_books.length > 0 ? (
+                       level.unique_books.map((ub: any, idx: number) => (
+                         <View key={idx} style={[styles.bookWrapper, { alignItems: 'center', width: 90 }]}>
+                           {ub.image_url ? (
+                             <Image 
+                               source={{ uri: ub.image_url.startsWith('http') ? ub.image_url : BASE_URL + ub.image_url }} 
+                               style={styles.bookCover} 
+                               resizeMode="cover"
+                             />
+                           ) : (
+                             <View style={styles.bookPlaceholder}>
+                               <Text style={styles.bookSpineText} numberOfLines={2}>
+                                 {ub.title}
+                               </Text>
+                             </View>
+                           )}
+                           <View style={{ backgroundColor: '#FEF3C7', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginTop: 4, borderWidth: 1, borderColor: '#D97706' }}>
+                             <Text style={{ fontSize: 10, fontWeight: 'bold', color: '#B45309' }}>SL: {ub.total_copies}</Text>
                            </View>
-                         )}
-                       </View>
-                     ))}
-                     
-                     {/* Nếu kệ trống thì báo */}
-                     {booksOnThisLevel.length === 0 && (
-                        <Text style={{ color: "#78350F", fontStyle: "italic", alignSelf: "flex-end", paddingBottom: 10 }}>Trống</Text>
+                         </View>
+                       ))
+                     ) : (
+                       <Text style={{ color: "#78350F", fontStyle: "italic", alignSelf: "flex-end", paddingBottom: 10 }}>Trống</Text>
                      )}
                    </View>
 

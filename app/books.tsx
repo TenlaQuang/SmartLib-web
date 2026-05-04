@@ -10,23 +10,32 @@ import {
   TextInput,
   Alert,
   Image,
-  ScrollView
+  ScrollView,
+  Platform
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
 import { getBooks, createBook, updateBook, deleteBook, uploadImage, getLocations, importBooksExcel, BASE_URL } from "../services/api";
+import BookCard from "../components/BookCard";
 
 export default function BookManagementPage() {
-  const [books, setBooks] = useState<any[]>([]); // Grouped books
+  const [books, setBooks] = useState<any[]>([]); // Sách hiện tại
+  const [totalBooks, setTotalBooks] = useState(0);
+  const [page, setPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const pageSize = 20;
+
   const [locations, setLocations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Modal State
   const [modalVisible, setModalVisible] = useState(false);
-  const [editingTitleGroup, setEditingTitleGroup] = useState<string | null>(null);
+  const [isSingleAddMode, setIsSingleAddMode] = useState(false);
+  const [editingBookId, setEditingBookId] = useState<number | null>(null);
 
-  // Form State for Group
+  // Form State
+  const [isbn, setIsbn] = useState("");
   const [title, setTitle] = useState("");
   const [marketPrice, setMarketPrice] = useState("");
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -35,13 +44,7 @@ export default function BookManagementPage() {
   // Location Dropdown State
   const [selectedLocationId, setSelectedLocationId] = useState<number | null>(null);
   const [showLocationSelect, setShowLocationSelect] = useState(false);
-
-  // Single book creation state
-  const [isSingleAddMode, setIsSingleAddMode] = useState(false);
-  const [isbn, setIsbn] = useState("");
-
-  // Copies State (for editing individual status)
-  const [editingCopies, setEditingCopies] = useState<any[]>([]);
+  const [status, setStatus] = useState("available"); // Trạng thái sách
 
   const fetchLocationsList = async () => {
     try {
@@ -52,27 +55,16 @@ export default function BookManagementPage() {
     }
   };
 
-  const fetchData = async () => {
+  const fetchData = async (currentPage = page, currentSearch = searchQuery) => {
     setLoading(true);
     try {
-      const data = await getBooks();
-      // Group data by title
-      const groupedMap = new Map();
-      data.forEach((book: any) => {
-        if (!groupedMap.has(book.title)) {
-          groupedMap.set(book.title, {
-            title: book.title,
-            image_url: book.image_url,
-            market_price: book.market_price,
-            location_id: book.location_id,
-            location: book.location,
-            copies: []
-          });
-        }
-        groupedMap.get(book.title).copies.push(book);
-      });
-      const groupedData = Array.from(groupedMap.values());
-      setBooks(groupedData);
+      const result = await getBooks(currentPage, pageSize, currentSearch);
+      if (result && result.data) {
+        setBooks(result.data);
+        setTotalBooks(result.total);
+      } else {
+        setBooks(Array.isArray(result) ? result : []);
+      }
     } catch (error) {
       console.error("Lỗi:", error);
     } finally {
@@ -116,7 +108,6 @@ export default function BookManagementPage() {
         const { uri, name, mimeType } = result.assets[0];
         
         await importBooksExcel(uri, mimeType || "application/octet-stream", name);
-        // Note: Alert does not always style perfectly on web, but works.
         Alert.alert("Thành công", "Đã chèn dữ liệu sách từ file Excel!");
         fetchData();
       }
@@ -128,30 +119,27 @@ export default function BookManagementPage() {
 
   const openAddModal = () => {
     setIsSingleAddMode(true);
-    setEditingTitleGroup(null);
+    setEditingBookId(null);
     setIsbn("");
     setTitle("");
     setMarketPrice("");
     setImageUrl(null);
     setLocalImageUri(null);
     setSelectedLocationId(null);
-    setEditingCopies([]);
+    setStatus("available");
     setModalVisible(true);
   };
 
-  const openEditGroupModal = (group: any) => {
+  const openEditBookModal = (book: any) => {
     setIsSingleAddMode(false);
-    setEditingTitleGroup(group.title);
-    setTitle(group.title);
-    setMarketPrice(group.market_price ? group.market_price.toString() : "");
-    setImageUrl(group.image_url || null);
+    setEditingBookId(book.book_id);
+    setIsbn(book.isbn || "");
+    setTitle(book.title);
+    setMarketPrice(book.market_price ? book.market_price.toString() : "");
+    setImageUrl(book.image_url || null);
     setLocalImageUri(null);
-    setSelectedLocationId(group.location_id || null);
-    
-    // Sort copies to show 'available' first
-    const sortedCopies = [...group.copies].sort((a,b) => a.status.localeCompare(b.status));
-    setEditingCopies(sortedCopies);
-    
+    setSelectedLocationId(book.location_id || null);
+    setStatus(book.status || "available");
     setModalVisible(true);
   };
 
@@ -165,20 +153,6 @@ export default function BookManagementPage() {
 
     if (!result.canceled && result.assets && result.assets.length > 0) {
       setLocalImageUri(result.assets[0].uri);
-    }
-  };
-
-  const handleToggleCopyStatus = async (bookId: number, currentStatus: string) => {
-    const newStatus = currentStatus === "available" ? "rented" : "available";
-    try {
-      // Optimitic update in UI Modal
-      setEditingCopies(prev => prev.map(c => c.book_id === bookId ? {...c, status: newStatus} : c));
-      await updateBook(bookId, { status: newStatus });
-      fetchData(); // refresh in background
-    } catch (error) {
-      Alert.alert("Lỗi", "Không thể cập nhật trạng thái cuốn vật lý này.");
-      // Revert if error
-      setEditingCopies(prev => prev.map(c => c.book_id === bookId ? {...c, status: currentStatus} : c));
     }
   };
 
@@ -200,30 +174,21 @@ export default function BookManagementPage() {
     }
 
     try {
+      const payload = {
+        isbn,
+        title,
+        market_price: parseFloat(marketPrice),
+        image_url: finalImageUrl,
+        location_id: selectedLocationId,
+        status: status
+      };
+
       if (isSingleAddMode) {
-        const payload = {
-          isbn,
-          title,
-          market_price: parseFloat(marketPrice),
-          image_url: finalImageUrl,
-          location_id: selectedLocationId,
-        };
         await createBook(payload);
-      } else {
-        // Edit Mode: update ALL copies in this group with Title, Price, Location, Image
-        // If there are many copies, Loop or Promise.all.
-        // Doing Promise.all for all editingCopies
-        const updatePromises = editingCopies.map(copy => {
-            const payload = {
-                title, 
-                market_price: parseFloat(marketPrice),
-                image_url: finalImageUrl,
-                location_id: selectedLocationId
-            };
-            return updateBook(copy.book_id, payload);
-        });
-        await Promise.all(updatePromises);
+      } else if (editingBookId) {
+        await updateBook(editingBookId, payload);
       }
+
       setModalVisible(false);
       fetchData(); 
     } catch (error: any) {
@@ -232,11 +197,12 @@ export default function BookManagementPage() {
     }
   };
 
-  const handleDeleteGroup = async (group: any) => {
-    if (confirm(`Bạn có chắc chắn muốn xóa TẤT CẢ bản sao (${group.copies.length} cuốn) của Tựa sách "${group.title}" không?`)) {
+  const handleDeleteBook = async () => {
+    if (!editingBookId) return;
+    if (confirm("Chắc chắn xóa cuốn sách này khỏi hệ thống?")) {
       try {
-        const deletePromises = group.copies.map((c: any) => deleteBook(c.book_id));
-        await Promise.all(deletePromises);
+        await deleteBook(editingBookId);
+        setModalVisible(false);
         fetchData();
       } catch (error) {
         Alert.alert("Lỗi", "Không thể xóa tựa sách!");
@@ -244,54 +210,7 @@ export default function BookManagementPage() {
     }
   };
 
-  const handleDeleteCopy = async (bookId: number) => {
-    if (confirm("Chắc chắn xóa cuốn sách vật lý này?")) {
-      try {
-        await deleteBook(bookId);
-        setEditingCopies(prev => prev.filter(c => c.book_id !== bookId));
-        fetchData();
-      } catch (error) {
-        Alert.alert("Lỗi", "Lỗi xóa!");
-      }
-    }
-  };
-
-  const renderItem = ({ item }: { item: any }) => {
-    const totalCopies = item.copies.length;
-    const availableCopies = item.copies.filter((c: any) => c.status === "available").length;
-    const rentedCopies = item.copies.filter((c: any) => c.status === "rented").length;
-    const locationName = item.location ? `${item.location.zone_name} - ${item.location.shelf_id}` : 'Hàng Chờ (Kho)';
-
-    return (
-      <View style={styles.tableRow}>
-        <View style={{ width: 50, height: 60, marginRight: 15, backgroundColor: "#E5E7EB", borderRadius: 4, overflow: 'hidden' }}>
-          {item.image_url ? (
-            <Image source={{ uri: item.image_url.startsWith('http') ? item.image_url : BASE_URL + item.image_url }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
-          ) : (
-            <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-              <Ionicons name="image-outline" size={24} color="#9CA3AF" />
-            </View>
-          )}
-        </View>
-        <Text style={[styles.cell, { flex: 2 }]} numberOfLines={2}>{item.title}</Text>
-        <View style={[styles.cell, { flex: 2 }]}>
-          <Text style={{fontWeight: 'bold'}}>Tổng: {totalCopies}</Text>
-          <Text style={{fontSize: 12, color: 'green'}}>{availableCopies} Sẵn sàng</Text>
-          <Text style={{fontSize: 12, color: 'orange'}}>{rentedCopies} Đang mượn</Text>
-        </View>
-        <Text style={[styles.cell, { flex: 1.5 }]}>{locationName}</Text>
-        <Text style={[styles.cell, { flex: 1 }]}>{item.market_price} đ</Text>
-        <View style={styles.actionCell}>
-          <TouchableOpacity style={styles.actionButton} onPress={() => openEditGroupModal(item)}>
-            <Ionicons name="pencil" size={18} color="#80A1BA" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton} onPress={() => handleDeleteGroup(item)}>
-            <Ionicons name="trash" size={18} color="#EF4444" />
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  };
+  // renderItem cũ đã bị xoá để chuyển sang dùng BookCard dạng lưới
 
   const renderLocationSelect = () => {
     const selectedObj = locations.find(l => l.location_id === selectedLocationId);
@@ -335,23 +254,38 @@ export default function BookManagementPage() {
         </View>
       </View>
 
-      <View style={styles.tableContainer}>
-        <View style={styles.tableHeader}>
-          <Text style={[styles.headerCell, { width: 65 }]}></Text>
-          <Text style={[styles.headerCell, { flex: 2 }]}>Tựa sách</Text>
-          <Text style={[styles.headerCell, { flex: 2 }]}>Thống kê số lượng</Text>
-          <Text style={[styles.headerCell, { flex: 1.5 }]}>Vị trí Kệ</Text>
-          <Text style={[styles.headerCell, { flex: 1 }]}>Giá (VNĐ)</Text>
-          <Text style={[styles.headerCell, { width: 80, textAlign: "center" }]}>Thao tác</Text>
-        </View>
+      {/* Thanh Tìm Kiếm */}
+      <View style={{ flexDirection: 'row', marginBottom: 15 }}>
+         <TextInput 
+           style={[styles.input, { flex: 1, backgroundColor: '#FFF' }]} 
+           placeholder="Tìm kiếm sách theo tên hoặc mã ISBN..."
+           value={searchQuery}
+           onChangeText={setSearchQuery}
+           onSubmitEditing={() => { setPage(1); fetchData(1, searchQuery); }}
+         />
+         <TouchableOpacity 
+           style={[styles.addButton, { marginLeft: 10 }]} 
+           onPress={() => { setPage(1); fetchData(1, searchQuery); }}
+         >
+            <Ionicons name="search" size={20} color="#fff" />
+            <Text style={styles.addButtonText}>Tìm</Text>
+         </TouchableOpacity>
+      </View>
 
+      <View style={[styles.tableContainer, { backgroundColor: 'transparent', shadowOpacity: 0, elevation: 0 }]}>
         {loading ? (
           <ActivityIndicator size="large" color="#80A1BA" style={{ marginTop: 20 }} />
         ) : (
           <FlatList
             data={books}
-            keyExtractor={(item) => item.title}
-            renderItem={renderItem}
+            keyExtractor={(item) => item.book_id.toString()}
+            numColumns={Platform.OS === 'web' ? 4 : 2}
+            key={Platform.OS === 'web' ? 'grid-4' : 'grid-2'}
+            renderItem={({ item }) => (
+              <View style={{ flex: 1, margin: 5, maxWidth: Platform.OS === 'web' ? '25%' : '50%' }}>
+                <BookCard book={item} onPress={() => openEditBookModal(item)} />
+              </View>
+            )}
             ListEmptyComponent={
               <Text style={{ textAlign: "center", padding: 20, color: "#6B7280" }}>
                 Chưa có sách nào trong thư viện.
@@ -359,6 +293,17 @@ export default function BookManagementPage() {
             }
           />
         )}
+      </View>
+
+      {/* Phân Trang (Pagination) */}
+      <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 15 }}>
+          <TouchableOpacity disabled={page === 1} onPress={() => { setPage(p => p - 1); fetchData(page - 1); }} style={{ padding: 10, opacity: page === 1 ? 0.5 : 1 }}>
+             <Ionicons name="chevron-back" size={24} color="#4B5563" />
+          </TouchableOpacity>
+          <Text style={{ marginHorizontal: 20, fontSize: 16, fontWeight: 'bold' }}>Trang {page} / {Math.ceil(totalBooks / pageSize) || 1}</Text>
+          <TouchableOpacity disabled={page >= Math.ceil(totalBooks / pageSize)} onPress={() => { setPage(p => p + 1); fetchData(page + 1); }} style={{ padding: 10, opacity: page >= Math.ceil(totalBooks / pageSize) ? 0.5 : 1 }}>
+             <Ionicons name="chevron-forward" size={24} color="#4B5563" />
+          </TouchableOpacity>
       </View>
 
       <Modal visible={modalVisible} transparent={true} animationType="fade">
@@ -373,17 +318,15 @@ export default function BookManagementPage() {
               </TouchableOpacity>
             </View>
 
-            {isSingleAddMode && (
-              <View style={styles.formGroup}>
-                <View style={styles.labelRow}>
-                  <Text style={styles.label}>ISBN (Mã sách):</Text>
-                  <TouchableOpacity onPress={generateISBN}>
-                    <Text style={styles.generateText}>Tạo mã tự động ⚡</Text>
-                  </TouchableOpacity>
-                </View>
-                <TextInput style={styles.input} value={isbn} onChangeText={setIsbn} placeholder="VD: 978..." />
+            <View style={styles.formGroup}>
+              <View style={styles.labelRow}>
+                <Text style={styles.label}>ISBN (Mã sách):</Text>
+                <TouchableOpacity onPress={generateISBN}>
+                  <Text style={styles.generateText}>Tạo mã tự động ⚡</Text>
+                </TouchableOpacity>
               </View>
-            )}
+              <TextInput style={styles.input} value={isbn} onChangeText={setIsbn} placeholder="VD: 978..." />
+            </View>
 
             <View style={styles.formGroup}>
               <Text style={styles.label}>Tựa Tiêu Đề:</Text>
@@ -412,30 +355,35 @@ export default function BookManagementPage() {
             </View>
 
             {!isSingleAddMode && (
-               <View style={[styles.formGroup, {borderTopWidth: 1, borderColor: '#E5E7EB', paddingTop: 10}]}>
-                  <Text style={[styles.label, {marginBottom: 10}]}>Danh sách bản vật lý (Có thể nhấn trạng thái để đổi ngay):</Text>
-                  <ScrollView style={{maxHeight: 180, backgroundColor: '#F9FAFB', padding: 8, borderRadius: 8}}>
-                     {editingCopies.map((copy: any) => (
-                        <View key={copy.book_id} style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: '#E5E7EB'}}>
-                           <Text style={{fontSize: 13, color: '#374151', flex: 1}}>{copy.isbn}</Text>
-                           <TouchableOpacity onPress={() => handleToggleCopyStatus(copy.book_id, copy.status)} style={{paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, backgroundColor: copy.status === 'available' ? '#D1FAE5' : '#FEF3C7', marginRight: 10}}>
-                               <Text style={{fontSize: 12, color: copy.status === 'available' ? '#065F46' : '#92400E', fontWeight: 'bold'}}>
-                                   {copy.status}
-                               </Text>
-                           </TouchableOpacity>
-                           <TouchableOpacity onPress={() => handleDeleteCopy(copy.book_id)}>
-                               <Ionicons name="trash-outline" size={16} color="#EF4444" />
-                           </TouchableOpacity>
-                        </View>
-                     ))}
-                     {editingCopies.length === 0 && <Text style={{fontSize: 12, color: '#9CA3AF'}}>Không có bản vật lý nào.</Text>}
-                  </ScrollView>
-               </View>
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Trạng thái (Khả dụng / Đang mượn):</Text>
+                <View style={{ flexDirection: 'row', marginTop: 5 }}>
+                  <TouchableOpacity 
+                    style={[styles.statusBtn, status === "available" && styles.statusBtnActive]}
+                    onPress={() => setStatus("available")}
+                  >
+                    <Text style={{ color: status === "available" ? '#FFF' : '#374151', fontWeight: 'bold' }}>Sẵn sàng</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={[styles.statusBtn, status === "rented" && { backgroundColor: '#F59E0B', borderColor: '#F59E0B' }]}
+                    onPress={() => setStatus("rented")}
+                  >
+                    <Text style={{ color: status === "rented" ? '#FFF' : '#374151', fontWeight: 'bold' }}>Đang mượn</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
             )}
 
-            <View style={styles.modalActions}>
-              <TouchableOpacity style={styles.cancelBtn} onPress={() => setModalVisible(false)}><Text style={styles.cancelBtnText}>Đóng</Text></TouchableOpacity>
-              <TouchableOpacity style={styles.saveBtn} onPress={handleSave}><Text style={styles.saveBtnText}>Lưu Nhóm Tựa Sách</Text></TouchableOpacity>
+            <View style={[styles.modalActions, { justifyContent: !isSingleAddMode ? 'space-between' : 'flex-end' }]}>
+              {!isSingleAddMode && (
+                <TouchableOpacity style={[styles.cancelBtn, { backgroundColor: '#FEE2E2' }]} onPress={handleDeleteBook}>
+                  <Text style={[styles.cancelBtnText, { color: '#EF4444' }]}>Xoá sách này</Text>
+                </TouchableOpacity>
+              )}
+              <View style={{ flexDirection: 'row' }}>
+                <TouchableOpacity style={styles.cancelBtn} onPress={() => setModalVisible(false)}><Text style={styles.cancelBtnText}>Đóng</Text></TouchableOpacity>
+                <TouchableOpacity style={styles.saveBtn} onPress={handleSave}><Text style={styles.saveBtnText}>Lưu Lại</Text></TouchableOpacity>
+              </View>
             </View>
           </View>
         </View>
@@ -477,5 +425,7 @@ const styles = StyleSheet.create({
   dropdownBtnText: { fontSize: 15, color: '#1F2937' },
   dropdownMenu: { position: 'absolute', top: 45, left: 0, right: 0, backgroundColor: '#FFF', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3, maxHeight: 150, zIndex: 9999 },
   dropdownItem: { paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
-  dropdownItemText: { fontSize: 14, color: '#4B5563' }
+  dropdownItemText: { fontSize: 14, color: '#4B5563' },
+  statusBtn: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 6, borderWidth: 1, borderColor: '#D1D5DB', marginRight: 10 },
+  statusBtnActive: { backgroundColor: '#10B981', borderColor: '#10B981' }
 });
