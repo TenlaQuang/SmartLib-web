@@ -3,8 +3,8 @@ import { Platform } from 'react-native';
 
 // Thay đổi URL này thành URL backend của bạn khi deploy (ví dụ: https://smartlib-be.onrender.com)
 // Link Render của bạn (Bỏ đoạn ?fbclid... ở đuôi đi cho chuẩn)
-// export const BASE_URL = 'https://smartlib-be.onrender.com';
-export const BASE_URL = 'http://127.0.0.1:8000';
+export const BASE_URL = 'https://smartlib-be.onrender.com';
+//export const BASE_URL = 'http://127.0.0.1:8000';
 // export const BASE_URL = Platform.OS === 'android' ? 'http://10.0.2.2:8000' : 'http://localhost:8000';
 
 const api = axios.create({
@@ -21,7 +21,7 @@ export const getBooks = async (page = 1, pageSize = 20, search = "", categoryId 
     let url = `/api/books?page=${page}&page_size=${pageSize}`;
     if (search) url += `&search=${encodeURIComponent(search)}`;
     if (categoryId) url += `&category_id=${categoryId}`;
-    
+
     const response = await api.get(url);
     return response.data;
   } catch (error) {
@@ -63,7 +63,7 @@ export const deleteBook = async (bookId: number) => {
 export const uploadImage = async (imageUri: string, mimeType: string, filename: string) => {
   try {
     const formData = new FormData();
-    
+
     // Expo có cách xử lý FormData cho ảnh khác biệt giữa Web và Điện thoại
     if (Platform.OS === 'web') {
       // Đối với Web, ta phải fetch uri (thường là blob:http://...) để biến thành Blob object
@@ -84,7 +84,7 @@ export const uploadImage = async (imageUri: string, mimeType: string, filename: 
         'Content-Type': 'multipart/form-data',
       },
     });
-    return response.data.image_url; 
+    return response.data.image_url;
   } catch (error) {
     console.error("Lỗi khi upload ảnh:", error);
     throw error;
@@ -159,3 +159,22 @@ export const importBooksExcel = async (fileUri: string, mimeType: string, filena
 };
 
 export default api;
+
+export const getDashboardStats = async () => {
+  try {
+    const response = await api.get('/api/dashboard/stats');
+    return response.data;
+  } catch (error) {
+    console.error('L?i khi fetch dashboard stats:', error);
+    throw error;
+  }
+};
+
+export const checkServerStatus = async () => {
+  try {
+    const response = await api.get('/');
+    return response.status === 200;
+  } catch (error) {
+    return false;
+  }
+};
