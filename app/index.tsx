@@ -24,7 +24,7 @@ export default function DashboardOverview() {
   if (loading || !stats) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#00f2fe" />
+        <ActivityIndicator size="large" color="#80A1BA" />
       </View>
     );
   }
@@ -39,7 +39,7 @@ export default function DashboardOverview() {
       <View style={styles.kpiRow}>
         <View style={styles.kpiCard}>
           <View style={styles.kpiHeader}>
-            <Ionicons name="people" size={24} color="#00f2fe" />
+            <Ionicons name="people" size={24} color="#80A1BA" />
             <Text style={styles.kpiTitle}>Người Dùng</Text>
           </View>
           <Text style={styles.kpiValue}>{kpis.total_users}</Text>
@@ -48,7 +48,7 @@ export default function DashboardOverview() {
 
         <View style={styles.kpiCard}>
           <View style={styles.kpiHeader}>
-            <Ionicons name="wallet" size={24} color="#4facfe" />
+            <Ionicons name="wallet" size={24} color="#91C4C3" />
             <Text style={styles.kpiTitle}>Tổng Thu Nhập Tháng</Text>
           </View>
           <Text style={styles.kpiValue}>{kpis.monthly_income.toLocaleString()} đ</Text>
@@ -57,7 +57,7 @@ export default function DashboardOverview() {
 
         <View style={styles.kpiCard}>
           <View style={styles.kpiHeader}>
-            <Ionicons name="book" size={24} color="#f093fb" />
+            <Ionicons name="book" size={24} color="#B4DEBD" />
             <Text style={styles.kpiTitle}>Sách Đang Mượn</Text>
           </View>
           <Text style={styles.kpiValue}>{kpis.borrowed_books}</Text>
@@ -142,13 +142,13 @@ export default function DashboardOverview() {
             <Text style={styles.panelTitle}>Tỷ lệ trạng thái sách</Text>
             <View style={styles.pieContainer}>
                <View style={styles.pieItem}>
-                 <View style={[styles.pieCircle, { borderColor: '#f093fb', borderLeftColor: 'transparent', borderTopColor: 'transparent', transform: [{rotate: '45deg'}] }]} />
+                 <View style={[styles.pieCircle, { borderColor: '#80A1BA', borderLeftColor: 'transparent', borderTopColor: 'transparent', transform: [{rotate: '45deg'}] }]} />
                  <Text style={styles.piePercentage}>{((kpis.borrowed_books / (kpis.total_books || 1)) * 100).toFixed(0)}%</Text>
                  <Text style={styles.pieLabel}>Đang Mượn</Text>
                </View>
 
                <View style={styles.pieItem}>
-                 <View style={[styles.pieCircle, { borderColor: '#00f2fe', borderRightColor: 'transparent', borderBottomColor: 'transparent', transform: [{rotate: '-45deg'}] }]} />
+                 <View style={[styles.pieCircle, { borderColor: '#B4DEBD', borderRightColor: 'transparent', borderBottomColor: 'transparent', transform: [{rotate: '-45deg'}] }]} />
                  <Text style={styles.piePercentage}>{(((kpis.total_books - kpis.borrowed_books) / (kpis.total_books || 1)) * 100).toFixed(0)}%</Text>
                  <Text style={styles.pieLabel}>Khả Dụng</Text>
                </View>
@@ -162,61 +162,61 @@ export default function DashboardOverview() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0f172a" }, // Dark Theme
+  container: { flex: 1, backgroundColor: "#FFF7DD" }, // Cream background
   scrollContent: { padding: 20 },
-  loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#0f172a" },
-  pageTitle: { fontSize: 26, fontWeight: "bold", color: "#FFFFFF", marginBottom: 20, letterSpacing: 0.5 },
+  loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#FFF7DD" },
+  pageTitle: { fontSize: 26, fontWeight: "bold", color: "#1e293b", marginBottom: 20, letterSpacing: 0.5 },
   
   kpiRow: { flexDirection: Platform.OS === 'web' ? 'row' : 'column', justifyContent: 'space-between', marginBottom: 20 },
   kpiCard: { 
     flex: 1, 
-    backgroundColor: '#1e293b', 
+    backgroundColor: '#FFFFFF', 
     borderRadius: 16, 
     padding: 20, 
     marginHorizontal: Platform.OS === 'web' ? 10 : 0,
     marginBottom: Platform.OS === 'web' ? 0 : 15,
-    borderWidth: 1,
-    borderColor: '#334155'
+    shadowColor: "#80A1BA", shadowOpacity: 0.1, shadowRadius: 10, elevation: 5,
+    borderWidth: 1, borderColor: '#E5E7EB'
   },
   kpiHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 15 },
-  kpiTitle: { color: '#94a3b8', fontSize: 14, fontWeight: '600', marginLeft: 10, textTransform: 'uppercase' },
-  kpiValue: { color: '#f8fafc', fontSize: 28, fontWeight: 'bold', marginBottom: 5 },
-  kpiSubtitle: { color: '#64748b', fontSize: 12 },
+  kpiTitle: { color: '#64748b', fontSize: 14, fontWeight: '600', marginLeft: 10, textTransform: 'uppercase' },
+  kpiValue: { color: '#1e293b', fontSize: 28, fontWeight: 'bold', marginBottom: 5 },
+  kpiSubtitle: { color: '#94a3b8', fontSize: 12 },
 
   mainGrid: { flexDirection: Platform.OS === 'web' ? 'row' : 'column', flex: 1 },
   leftColumn: { flex: 1, marginRight: Platform.OS === 'web' ? 20 : 0, marginBottom: Platform.OS === 'web' ? 0 : 20 },
   rightColumn: { flex: 1.5 },
   
-  panel: { backgroundColor: '#1e293b', borderRadius: 16, padding: 20, borderWidth: 1, borderColor: '#334155', flex: 1 },
-  panelTitle: { color: '#f8fafc', fontSize: 16, fontWeight: 'bold', marginBottom: 20 },
+  panel: { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 20, shadowColor: "#80A1BA", shadowOpacity: 0.1, shadowRadius: 10, elevation: 5, borderWidth: 1, borderColor: '#E5E7EB', flex: 1 },
+  panelTitle: { color: '#1e293b', fontSize: 16, fontWeight: 'bold', marginBottom: 20 },
   
   storageOverviewRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 },
   storageMetric: { alignItems: 'center' },
-  storageValue: { fontSize: 24, fontWeight: 'bold', color: '#f8fafc' },
+  storageValue: { fontSize: 24, fontWeight: 'bold', color: '#1e293b' },
   storageLabel: { fontSize: 12, color: '#64748b', marginTop: 4 },
   
-  progressBarBg: { height: 8, backgroundColor: '#334155', borderRadius: 4, overflow: 'hidden' },
-  progressBarFill: { height: '100%', backgroundColor: '#00f2fe', borderRadius: 4 },
-  progressText: { textAlign: 'right', color: '#94a3b8', fontSize: 12, marginTop: 8 },
+  progressBarBg: { height: 8, backgroundColor: '#E5E7EB', borderRadius: 4, overflow: 'hidden' },
+  progressBarFill: { height: '100%', backgroundColor: '#91C4C3', borderRadius: 4 },
+  progressText: { textAlign: 'right', color: '#64748b', fontSize: 12, marginTop: 8 },
   
   emptyShelvesList: { marginTop: 15, maxHeight: 300 },
-  shelfRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#0f172a', padding: 12, borderRadius: 8, marginBottom: 10 },
-  shelfZoneText: { color: '#e2e8f0', fontWeight: 'bold', fontSize: 14 },
+  shelfRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#F8FAFC', padding: 12, borderRadius: 8, marginBottom: 10 },
+  shelfZoneText: { color: '#334155', fontWeight: 'bold', fontSize: 14 },
   shelfDetailText: { color: '#64748b', fontSize: 12, marginTop: 2 },
-  emptyBadge: { backgroundColor: 'rgba(0, 242, 254, 0.1)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(0, 242, 254, 0.3)' },
-  emptyBadgeText: { color: '#00f2fe', fontSize: 12, fontWeight: 'bold' },
+  emptyBadge: { backgroundColor: '#E0F2FE', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20, borderWidth: 1, borderColor: '#BAE6FD' },
+  emptyBadgeText: { color: '#0284C7', fontSize: 12, fontWeight: 'bold' },
 
   barChartContainer: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'flex-end', height: 200, marginTop: 20 },
   barColumn: { alignItems: 'center', flex: 1 },
   barLabelTop: { marginBottom: 8 },
-  barLabelText: { color: '#94a3b8', fontSize: 12, fontWeight: 'bold' },
-  barTrack: { width: 30, height: 140, backgroundColor: '#334155', borderRadius: 6, justifyContent: 'flex-end', overflow: 'hidden' },
-  barFill: { width: '100%', backgroundColor: '#f093fb', borderRadius: 6 },
+  barLabelText: { color: '#64748b', fontSize: 12, fontWeight: 'bold' },
+  barTrack: { width: 30, height: 140, backgroundColor: '#F1F5F9', borderRadius: 6, justifyContent: 'flex-end', overflow: 'hidden' },
+  barFill: { width: '100%', backgroundColor: '#80A1BA', borderRadius: 6 },
   barDateText: { color: '#64748b', fontSize: 11, marginTop: 10 },
 
   pieContainer: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', flex: 1 },
   pieItem: { alignItems: 'center', position: 'relative' },
   pieCircle: { width: 120, height: 120, borderRadius: 60, borderWidth: 15 },
-  piePercentage: { position: 'absolute', top: 45, color: '#f8fafc', fontSize: 20, fontWeight: 'bold' },
-  pieLabel: { color: '#94a3b8', fontSize: 14, marginTop: 15, fontWeight: '500' }
+  piePercentage: { position: 'absolute', top: 45, color: '#1e293b', fontSize: 20, fontWeight: 'bold' },
+  pieLabel: { color: '#64748b', fontSize: 14, marginTop: 15, fontWeight: '500' }
 });
