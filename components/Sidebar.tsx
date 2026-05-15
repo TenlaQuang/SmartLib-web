@@ -30,7 +30,8 @@ export default function Sidebar({ isOpen }: SidebarProps) {
       setExpandedState: setBorrowExpanded,
       subItems: [
         { name: 'Quản lý Giao dịch', route: '/transactions' },
-        { name: 'Duyệt mượn sách', route: '/borrow-approvals' }
+        { name: 'Duyệt mượn sách', route: '/borrow-approvals' },
+        { name: 'Duyệt trả sách', route: '/return-approvals' }
       ]
     },
     { 
