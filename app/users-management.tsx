@@ -8,10 +8,8 @@ export default function UsersManagement() {
    const [loading, setLoading] = useState(false);
    
    // Modals
-   const [showModal, setShowModal] = useState(false);
    const [showEditModal, setShowEditModal] = useState(false);
    const [selectedUser, setSelectedUser] = useState<any>(null);
-   const [nfcSerial, setNfcSerial] = useState("");
    
    // Form chỉnh sửa
    const [editForm, setEditForm] = useState({
@@ -142,36 +140,6 @@ export default function UsersManagement() {
       }
    };
 
-   const openAssignModal = (user: any) => {
-      setSelectedUser(user);
-      setNfcSerial("");
-      setShowModal(true);
-   };
-
-   const submitAssignNFC = async () => {
-      if (!nfcSerial.trim()) {
-         Alert.alert("Lỗi", "Vui lòng quét hoặc nhập mã thẻ NFC");
-         return;
-      }
-      try {
-         const resp = await fetch(`${BASE_URL}/api/users/${selectedUser.user_id}/assign-nfc`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ nfc_serial: nfcSerial.trim() })
-         });
-         if (resp.ok) {
-            Alert.alert("Thành công", "Đã gán thẻ NFC vào tài khoản!");
-            setShowModal(false);
-            fetchUsers();
-         } else {
-            const data = await resp.json();
-            Alert.alert("Lỗi", data.detail);
-         }
-      } catch (e) {
-         Alert.alert("Lỗi", "Không thể kết nối");
-      }
-   };
-
    const usersWithNFC = users.filter(u => u.status === 'active');
    const usersWithoutNFC = users.filter(u => u.status === 'pending_nfc');
    const usersLocked = users.filter(u => u.status === 'locked');
@@ -230,10 +198,6 @@ export default function UsersManagement() {
                               <Ionicons name="notifications-outline" size={16} color="#B45309" />
                               <Text style={{color: '#B45309', marginLeft: 5, fontSize: 12, fontWeight: 'bold'}}>Nhắc nhở</Text>
                            </TouchableOpacity>
-                           <TouchableOpacity style={styles.btnAssign} onPress={() => openAssignModal(user)}>
-                              <Ionicons name="scan-outline" size={16} color="#FFFFFF" />
-                              <Text style={{color: '#FFFFFF', marginLeft: 5, fontSize: 12, fontWeight: 'bold'}}>Cấp Thẻ</Text>
-                           </TouchableOpacity>
                            <TouchableOpacity onPress={() => handleDeleteUser(user)} style={styles.actionBtn}>
                               <Ionicons name="trash-outline" size={20} color="#EF4444" />
                            </TouchableOpacity>
@@ -270,32 +234,6 @@ export default function UsersManagement() {
                </View>
             </ScrollView>
          )}
-
-         {/* Modal Assign NFC */}
-         <Modal visible={showModal} transparent animationType="fade">
-            <View style={styles.modalOverlay}>
-               <View style={styles.modalContent}>
-                  <View style={styles.modalHeader}>
-                     <Text style={styles.modalTitle}>Gán thẻ NFC tại chỗ</Text>
-                     <TouchableOpacity onPress={() => setShowModal(false)}>
-                        <Ionicons name="close" size={24} color="#6B7280" />
-                     </TouchableOpacity>
-                  </View>
-                  <Text style={{ marginBottom: 15, color: '#4B5563' }}>Sinh viên: {selectedUser?.full_name}</Text>
-                  <Text style={{ fontWeight: 'bold', marginBottom: 5 }}>Quét thẻ trắng để lấy mã:</Text>
-                  <TextInput
-                     style={styles.textInput}
-                     placeholder="Đưa thẻ vào máy quét..."
-                     value={nfcSerial}
-                     onChangeText={setNfcSerial}
-                     autoFocus
-                  />
-                  <TouchableOpacity style={styles.btnApproveAction} onPress={submitAssignNFC}>
-                     <Text style={{ color: '#FFF', fontWeight: 'bold', textAlign: 'center' }}>Xác Nhận Cấp Thẻ</Text>
-                  </TouchableOpacity>
-               </View>
-            </View>
-         </Modal>
 
          {/* Modal Edit User */}
          <Modal visible={showEditModal} transparent animationType="slide">

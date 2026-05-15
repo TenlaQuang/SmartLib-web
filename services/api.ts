@@ -178,3 +178,9 @@ export const checkServerStatus = async () => {
     return false;
   }
 };
+
+export const getCategories = async () => {
+  const resp = await fetch(`${BASE_URL}/api/categories`);
+  if (!resp.ok) throw { response: { data: await resp.json() } };
+  return resp.json();
+};

@@ -1,25 +1,28 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useCallback } from "react";
 import { StyleSheet, Text, View, ScrollView, ActivityIndicator, Platform } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect } from "expo-router";
 import { getDashboardStats } from "../services/api";
 
 export default function DashboardOverview() {
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const data = await getDashboardStats();
-        setStats(data);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchStats();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      const fetchStats = async () => {
+        try {
+          const data = await getDashboardStats();
+          setStats(data);
+        } catch (error) {
+          console.error(error);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchStats();
+    }, [])
+  );
 
   if (loading || !stats) {
     return (

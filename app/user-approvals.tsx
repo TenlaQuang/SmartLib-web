@@ -70,17 +70,17 @@ export default function UserApprovals() {
             <ScrollView style={{ flex: 1 }}>
                {requests.map(req => (
                   <TouchableOpacity key={req.request_id} style={styles.reqCard} onPress={() => { setSelectedReq(req); setShowModal(true); }}>
-                     <View style={styles.reqAvatar}><Ionicons name="document-text" size={24} color="#FFFFFF" /></View>
+                     <View style={[styles.reqAvatar, req.request_status === 'approved' ? {backgroundColor: '#10B981'} : req.request_status === 'rejected' ? {backgroundColor: '#EF4444'} : {}]}>
+                        <Ionicons name={req.request_status === 'approved' ? "checkmark-circle" : req.request_status === 'rejected' ? "close-circle" : "document-text"} size={24} color="#FFFFFF" />
+                     </View>
                      <View style={{ flex: 1 }}>
                         <Text style={styles.reqName}>{req.full_name} ({req.user_code})</Text>
                         <Text style={styles.reqDetail}>Trạng thái TT: {req.payment_status}</Text>
-                        {req.nfc_serial ? (
-                           <Text style={{color: '#046C4E', fontSize: 12, fontWeight: 'bold'}}><Ionicons name="checkmark-circle"/> Đã cung cấp NFC: {req.nfc_serial}</Text>
-                        ) : (
-                           <Text style={{color: '#B45309', fontSize: 12}}><Ionicons name="alert-circle"/> Không kèm thẻ NFC (Sẽ nhận sau)</Text>
-                        )}
+                        <Text style={[styles.reqDetail, {fontWeight: 'bold', color: req.request_status === 'approved' ? '#10B981' : req.request_status === 'rejected' ? '#EF4444' : '#B45309'}]}>
+                           Đơn: {req.request_status.toUpperCase()}
+                        </Text>
                      </View>
-                     <View style={styles.btnAction}><Text style={{color: '#FFFFFF', fontWeight: 'bold'}}>Xem xét</Text></View>
+                     <View style={styles.btnAction}><Text style={{color: '#FFFFFF', fontWeight: 'bold'}}>Xem Chi Tiết</Text></View>
                   </TouchableOpacity>
                ))}
                {requests.length === 0 && <Text style={{color: '#6B7280', marginTop: 20}}>Không có đơn đăng ký nào chờ duyệt.</Text>}
@@ -114,24 +114,29 @@ export default function UserApprovals() {
                            </View>
                         )}
                         
-                        <View style={{ marginTop: 20, padding: 15, backgroundColor: selectedReq.nfc_serial ? '#DEF7EC' : '#FEF3C7', borderRadius: 8 }}>
-                           {selectedReq.nfc_serial ? (
-                              <Text style={{color: '#046C4E', fontWeight: 'bold'}}>Sinh viên này đã quét sẵn thẻ NFC ({selectedReq.nfc_serial}) tại quầy. Bấm Duyệt để kích hoạt ngay.</Text>
-                           ) : (
-                              <Text style={{color: '#B45309', fontWeight: 'bold'}}>Sinh viên đăng ký Online chưa có thẻ NFC. Bấm Duyệt để cho phép vào danh sách chờ nhận thẻ.</Text>
-                           )}
+                        <View style={{ marginTop: 20, padding: 15, backgroundColor: selectedReq.request_status === 'pending' ? '#FEF3C7' : '#F3F4F6', borderRadius: 8 }}>
+                           <Text style={{color: selectedReq.request_status === 'pending' ? '#B45309' : '#4B5563', fontWeight: 'bold'}}>
+                              {selectedReq.request_status === 'pending' ? 'Sinh viên đăng ký Online chưa có thẻ NFC. Bấm Duyệt để gửi email kích hoạt tài khoản cho sinh viên.' : `Đơn này đã được xử lý (${selectedReq.request_status}).`}
+                           </Text>
                         </View>
                      </View>
                   )}
 
-                  <View style={{ flexDirection: 'row', gap: 10 }}>
-                     <TouchableOpacity style={[styles.btn, { backgroundColor: '#EF4444', flex: 1 }]} onPress={handleReject}>
-                        <Text style={styles.btnText}>Từ Chối Đơn</Text>
+                  {selectedReq?.request_status === 'pending' && (
+                     <View style={{ flexDirection: 'row', gap: 10 }}>
+                        <TouchableOpacity style={[styles.btn, { backgroundColor: '#EF4444', flex: 1 }]} onPress={handleReject}>
+                           <Text style={styles.btnText}>Từ Chối Đơn</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={[styles.btn, { backgroundColor: '#80A1BA', flex: 2 }]} onPress={handleApprove}>
+                           <Text style={styles.btnText}>Duyệt Đơn Đăng Ký</Text>
+                        </TouchableOpacity>
+                     </View>
+                  )}
+                  {selectedReq?.request_status !== 'pending' && (
+                     <TouchableOpacity style={[styles.btn, { backgroundColor: '#6B7280' }]} onPress={() => setShowModal(false)}>
+                        <Text style={styles.btnText}>Đóng</Text>
                      </TouchableOpacity>
-                     <TouchableOpacity style={[styles.btn, { backgroundColor: '#80A1BA', flex: 2 }]} onPress={handleApprove}>
-                        <Text style={styles.btnText}>Duyệt {selectedReq?.nfc_serial ? 'Kích Hoạt Luôn' : 'Cho Phép Lấy Thẻ'}</Text>
-                     </TouchableOpacity>
-                  </View>
+                  )}
                </View>
             </View>
          </Modal>

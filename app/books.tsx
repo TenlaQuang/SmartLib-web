@@ -16,7 +16,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
-import { getBooks, createBook, updateBook, deleteBook, uploadImage, getLocations, importBooksExcel, BASE_URL } from "../services/api";
+import { getBooks, createBook, updateBook, deleteBook, uploadImage, getLocations, getCategories, importBooksExcel, BASE_URL } from "../services/api";
 import BookCard from "../components/BookCard";
 
 export default function BookManagementPage() {
@@ -38,18 +38,24 @@ export default function BookManagementPage() {
   const [isbn, setIsbn] = useState("");
   const [title, setTitle] = useState("");
   const [marketPrice, setMarketPrice] = useState("");
+  const [description, setDescription] = useState("");
+  const [author, setAuthor] = useState("");
+  const [pages, setPages] = useState("");
+  const [categoryId, setCategoryId] = useState<number | null>(null);
+  const [showCategorySelect, setShowCategorySelect] = useState(false);
+  const [categories, setCategories] = useState<any[]>([]);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [localImageUri, setLocalImageUri] = useState<string | null>(null);
   
   // Location Dropdown State
   const [selectedLocationId, setSelectedLocationId] = useState<number | null>(null);
-  const [showLocationSelect, setShowLocationSelect] = useState(false);
   const [status, setStatus] = useState("available"); // Trạng thái sách
 
-  const fetchLocationsList = async () => {
+  const fetchInitialData = async () => {
     try {
-      const data = await getLocations();
-      setLocations(data);
+      const [locData, catData] = await Promise.all([getLocations(), getCategories()]);
+      setLocations(locData);
+      setCategories(catData);
     } catch (e) {
       console.log(e);
     }
@@ -89,7 +95,7 @@ export default function BookManagementPage() {
   };
 
   useEffect(() => {
-    fetchLocationsList();
+    fetchInitialData();
     fetchData();
   }, []);
 
@@ -123,6 +129,10 @@ export default function BookManagementPage() {
     setIsbn("");
     setTitle("");
     setMarketPrice("");
+    setDescription("");
+    setAuthor("");
+    setPages("");
+    setCategoryId(null);
     setImageUrl(null);
     setLocalImageUri(null);
     setSelectedLocationId(null);
@@ -136,6 +146,10 @@ export default function BookManagementPage() {
     setIsbn(book.isbn || "");
     setTitle(book.title);
     setMarketPrice(book.market_price ? book.market_price.toString() : "");
+    setDescription(book.description || "");
+    setAuthor(book.author || "");
+    setPages(book.pages ? book.pages.toString() : "");
+    setCategoryId(book.category_id || null);
     setImageUrl(book.image_url || null);
     setLocalImageUri(null);
     setSelectedLocationId(book.location_id || null);
@@ -177,7 +191,11 @@ export default function BookManagementPage() {
       const payload = {
         isbn,
         title,
+        author,
+        category_id: categoryId,
+        pages: pages ? parseInt(pages) : null,
         market_price: parseFloat(marketPrice),
+        description,
         image_url: finalImageUrl,
         location_id: selectedLocationId,
         status: status
@@ -212,27 +230,24 @@ export default function BookManagementPage() {
 
   // renderItem cũ đã bị xoá để chuyển sang dùng BookCard dạng lưới
 
-  const renderLocationSelect = () => {
-    const selectedObj = locations.find(l => l.location_id === selectedLocationId);
-    const label = selectedObj ? `${selectedObj.zone_name} - ${selectedObj.shelf_id}` : 'Hàng Chờ (Trong kho)';
+  const renderCategorySelect = () => {
+    const selectedObj = categories.find(c => c.category_id === categoryId);
+    const label = selectedObj ? selectedObj.name : 'Chọn Thể Loại';
     
     return (
       <View style={{zIndex: 1000}}>
-        <TouchableOpacity style={styles.dropdownBtn} onPress={() => setShowLocationSelect(!showLocationSelect)}>
+        <TouchableOpacity style={styles.dropdownBtn} onPress={() => setShowCategorySelect(!showCategorySelect)}>
            <Text style={styles.dropdownBtnText}>{label}</Text>
            <Ionicons name="chevron-down" size={16} color="#6B7280" />
         </TouchableOpacity>
-        {showLocationSelect && (
-          <View style={styles.dropdownMenu}>
-             <TouchableOpacity style={styles.dropdownItem} onPress={() => { setSelectedLocationId(null); setShowLocationSelect(false); }}>
-                 <Text style={styles.dropdownItemText}>Hàng Chờ (Trong kho)</Text>
-             </TouchableOpacity>
-             {locations.map(loc => (
-                 <TouchableOpacity key={loc.location_id} style={styles.dropdownItem} onPress={() => { setSelectedLocationId(loc.location_id); setShowLocationSelect(false); }}>
-                     <Text style={styles.dropdownItemText}>{loc.zone_name} - {loc.shelf_id}</Text>
+        {showCategorySelect && (
+          <ScrollView style={styles.dropdownMenu} nestedScrollEnabled={true}>
+             {categories.map(cat => (
+                 <TouchableOpacity key={cat.category_id} style={styles.dropdownItem} onPress={() => { setCategoryId(cat.category_id); setShowCategorySelect(false); }}>
+                     <Text style={styles.dropdownItemText}>{cat.name}</Text>
                  </TouchableOpacity>
              ))}
-          </View>
+          </ScrollView>
         )}
       </View>
     );
@@ -334,13 +349,29 @@ export default function BookManagementPage() {
             </View>
 
             <View style={styles.formGroup}>
-              <Text style={styles.label}>Giá trị (VNĐ):</Text>
-              <TextInput style={styles.input} value={marketPrice} onChangeText={setMarketPrice} placeholder="VD: 100000" keyboardType="numeric" />
+              <Text style={styles.label}>Tác giả:</Text>
+              <TextInput style={styles.input} value={author} onChangeText={setAuthor} placeholder="VD: Nam Cao" />
             </View>
 
             <View style={[styles.formGroup, {zIndex: 10}]}>
-              <Text style={styles.label}>Vị Trí Lưu Trữ:</Text>
-              {renderLocationSelect()}
+              <Text style={styles.label}>Thể loại Sách:</Text>
+              {renderCategorySelect()}
+            </View>
+
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              <View style={[styles.formGroup, { flex: 1 }]}>
+                <Text style={styles.label}>Giá trị (VNĐ) <Text style={{color: 'red'}}>*</Text></Text>
+                <TextInput style={styles.input} value={marketPrice} onChangeText={setMarketPrice} placeholder="VD: 100000" keyboardType="numeric" />
+              </View>
+              <View style={[styles.formGroup, { flex: 1 }]}>
+                <Text style={styles.label}>Số trang:</Text>
+                <TextInput style={styles.input} value={pages} onChangeText={setPages} placeholder="VD: 300" keyboardType="numeric" />
+              </View>
+            </View>
+
+            <View style={styles.formGroup}>
+              <Text style={styles.label}>Mô tả nội dung sách:</Text>
+              <TextInput style={[styles.input, { height: 80, textAlignVertical: 'top' }]} value={description} onChangeText={setDescription} placeholder="Nhập tóm tắt..." multiline />
             </View>
 
             <View style={styles.formGroup}>
