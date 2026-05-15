@@ -228,6 +228,19 @@ export default function BookManagementPage() {
     }
   };
 
+  const handleUpdateRecommendations = async () => {
+    try {
+      const resp = await fetch(`${BASE_URL}/api/recommendations/update`, { method: "POST" });
+      if (resp.ok) {
+        Alert.alert("Thành công", "Đang chạy cập nhật hệ thống gợi ý sách ngầm trên server...");
+      } else {
+        Alert.alert("Lỗi", "Không thể chạy cập nhật!");
+      }
+    } catch (e) {
+      Alert.alert("Lỗi", "Không thể kết nối đến server.");
+    }
+  };
+
   // renderItem cũ đã bị xoá để chuyển sang dùng BookCard dạng lưới
 
   const renderCategorySelect = () => {
@@ -258,6 +271,10 @@ export default function BookManagementPage() {
       <View style={styles.headerBar}>
         <Text style={styles.title}>Quản lý Tựa Sách</Text>
         <View style={{flexDirection: 'row'}}>
+          <TouchableOpacity style={[styles.addButton, {backgroundColor: '#F59E0B', marginRight: 10}]} onPress={handleUpdateRecommendations}>
+            <Ionicons name="flash-outline" size={20} color="#fff" />
+            <Text style={styles.addButtonText}>Cập nhật AI Gợi ý</Text>
+          </TouchableOpacity>
           <TouchableOpacity style={[styles.addButton, {backgroundColor: '#10B981', marginRight: 10}]} onPress={handleImportExcel}>
             <Ionicons name="document-text-outline" size={20} color="#fff" />
             <Text style={styles.addButtonText}>Nhập Excel</Text>
