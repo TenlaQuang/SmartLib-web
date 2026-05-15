@@ -29,7 +29,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
       expandedState: borrowExpanded,
       setExpandedState: setBorrowExpanded,
       subItems: [
-        { name: 'Quản lý Giao dịch', route: '/transactions' },
+        { name: 'Thư viện Online', route: '/transactions' },
         { name: 'Duyệt mượn sách', route: '/borrow-approvals' },
         { name: 'Duyệt trả sách', route: '/return-approvals' }
       ]
@@ -113,12 +113,6 @@ export default function Sidebar({ isOpen }: SidebarProps) {
         })}
       </View>
 
-      <View style={styles.footer}>
-        <TouchableOpacity style={[styles.menuItem, !isOpen && styles.menuItemCollapsed]}>
-          <Ionicons name='log-out-outline' size={24} color='#EF4444' />
-          {isOpen && <Text style={[styles.menuText, { color: '#EF4444' }]} numberOfLines={1}>Đăng xuất</Text>}
-        </TouchableOpacity>
-      </View>
     </View>
   );
 }

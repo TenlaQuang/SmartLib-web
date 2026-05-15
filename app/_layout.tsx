@@ -5,7 +5,6 @@ import React, { useState } from "react";
 import {
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -28,16 +27,6 @@ export default function RootLayout() {
         </TouchableOpacity>
 
         <Text style={styles.headerTitle}>SmartLib System</Text>
-
-        {/* Thanh tìm kiếm */}
-        <View style={styles.searchBar}>
-          <Ionicons name="search" size={20} color="#FFFFFF" />
-          <TextInput
-            placeholder="Tìm mã sách, sinh viên..."
-            style={styles.searchInput}
-            placeholderTextColor="#E0E0E0"
-          />
-        </View>
 
         {/* Menu tài khoản thủ thư */}
         <View style={styles.userMenu}>
@@ -83,22 +72,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     marginRight: 30,
-  },
-  searchBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    borderRadius: 8,
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    flex: 1,
-    maxWidth: 400,
-  },
-  searchInput: {
-    color: "#FFFFFF",
-    marginLeft: 10,
-    fontSize: 14,
-    flex: 1,
   },
   userMenu: {
     flexDirection: "row",

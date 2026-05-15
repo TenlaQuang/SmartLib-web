@@ -6,6 +6,7 @@ import { BASE_URL } from "../services/api";
 export default function UsersManagement() {
    const [users, setUsers] = useState<any[]>([]);
    const [loading, setLoading] = useState(false);
+   const [searchQuery, setSearchQuery] = useState('');
    
    // Modals
    const [showEditModal, setShowEditModal] = useState(false);
@@ -140,14 +141,38 @@ export default function UsersManagement() {
       }
    };
 
-   const usersWithNFC = users.filter(u => u.status === 'active');
-   const usersWithoutNFC = users.filter(u => u.status === 'pending_nfc');
-   const usersLocked = users.filter(u => u.status === 'locked');
+   const filteredUsers = (list: any[]) =>
+      list.filter(u =>
+         u.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+         u.user_code?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+         u.email?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+
+   const usersWithNFC = filteredUsers(users.filter(u => u.status === 'active'));
+   const usersWithoutNFC = filteredUsers(users.filter(u => u.status === 'pending_nfc'));
+   const usersLocked = filteredUsers(users.filter(u => u.status === 'locked'));
 
    return (
       <View style={styles.container}>
          <View style={styles.header}>
             <Text style={styles.headerTitle}>Quản lý Sinh Viên</Text>
+         </View>
+
+         {/* Thanh tìm kiếm */}
+         <View style={styles.searchBarWrapper}>
+            <Ionicons name="search" size={20} color="#80A1BA" style={{ marginRight: 10 }} />
+            <TextInput
+               style={styles.searchInput}
+               placeholder="Tìm kiếm theo tên, mã SV, email..."
+               placeholderTextColor="#9CA3AF"
+               value={searchQuery}
+               onChangeText={setSearchQuery}
+            />
+            {searchQuery.length > 0 && (
+               <TouchableOpacity onPress={() => setSearchQuery('')}>
+                  <Ionicons name="close-circle" size={20} color="#9CA3AF" />
+               </TouchableOpacity>
+            )}
          </View>
 
          {loading ? <ActivityIndicator size="large" color="#80A1BA" style={{ marginTop: 20 }} /> : (
@@ -307,5 +332,26 @@ const styles = StyleSheet.create({
    label: { fontSize: 14, fontWeight: 'bold', color: '#4B5563', marginBottom: 5 },
    statusOption: { paddingHorizontal: 15, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: '#D1D5DB', backgroundColor: '#F9FAFB' },
    statusOptionActive: { backgroundColor: '#80A1BA', borderColor: '#80A1BA' },
-   actionBtn: { padding: 5, borderRadius: 6, backgroundColor: '#F3F4F6' }
+   actionBtn: { padding: 5, borderRadius: 6, backgroundColor: '#F3F4F6' },
+   searchBarWrapper: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#FFFFFF',
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: '#E5E7EB',
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      marginBottom: 20,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 3,
+      elevation: 1,
+   },
+   searchInput: {
+      flex: 1,
+      fontSize: 15,
+      color: '#374151',
+   }
 });
