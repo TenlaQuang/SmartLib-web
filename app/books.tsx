@@ -333,6 +333,7 @@ export default function BookManagementPage() {
               </TouchableOpacity>
             </View>
 
+            <ScrollView style={{flex: 1}} showsVerticalScrollIndicator={true}>
             <View style={styles.formGroup}>
               <View style={styles.labelRow}>
                 <Text style={styles.label}>ISBN (Mã sách):</Text>
@@ -416,6 +417,7 @@ export default function BookManagementPage() {
                 <TouchableOpacity style={styles.saveBtn} onPress={handleSave}><Text style={styles.saveBtnText}>Lưu Lại</Text></TouchableOpacity>
               </View>
             </View>
+            </ScrollView>
           </View>
         </View>
       </Modal>
@@ -436,8 +438,8 @@ const styles = StyleSheet.create({
   cell: { color: "#1F2937", fontSize: 14, paddingRight: 8 },
   actionCell: { flexDirection: "row", width: 80, justifyContent: "center" },
   actionButton: { padding: 6, marginHorizontal: 4, backgroundColor: "#F3F4F6", borderRadius: 6 },
-  modalOverlay: { flex: 1, backgroundColor: "rgba(0, 0, 0, 0.4)", justifyContent: "center", alignItems: "center" },
-  modalContent: { backgroundColor: "#FFF", borderRadius: 12, padding: 24, width: 450, maxWidth: "90%", shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 10, elevation: 5 },
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "center", alignItems: "center" },
+  modalContent: { backgroundColor: "#FFF", borderRadius: 12, padding: 24, width: 450, maxWidth: "90%", maxHeight: "90%", shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 10, elevation: 5 },
   modalHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 },
   modalTitle: { fontSize: 20, fontWeight: "bold", color: "#111827" },
   formGroup: { marginBottom: 16 },

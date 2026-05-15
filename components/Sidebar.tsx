@@ -16,16 +16,29 @@ export default function Sidebar({ isOpen }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [usersExpanded, setUsersExpanded] = useState(false);
+  const [borrowExpanded, setBorrowExpanded] = useState(false);
 
   const menuItems = [
     { name: 'Tổng quan', icon: 'pie-chart-outline', route: '/' },
     { name: 'Xếp Sách & Vị Trí', icon: 'albums-outline', route: '/storage' },
     { name: 'Quản lý Sách', icon: 'library-outline', route: '/books' },
-    { name: 'Mượn / Trả', icon: 'swap-horizontal-outline', route: '/transactions' },
+    { 
+      name: 'Mượn / Trả', 
+      icon: 'swap-horizontal-outline', 
+      isDropdown: true,
+      expandedState: borrowExpanded,
+      setExpandedState: setBorrowExpanded,
+      subItems: [
+        { name: 'Quản lý Giao dịch', route: '/transactions' },
+        { name: 'Duyệt mượn sách', route: '/borrow-approvals' }
+      ]
+    },
     { 
       name: 'Tài khoản & NFC', 
       icon: 'card-outline', 
       isDropdown: true,
+      expandedState: usersExpanded,
+      setExpandedState: setUsersExpanded,
       subItems: [
         { name: 'Quản lý Sinh Viên', route: '/users-management' },
         { name: 'Duyệt Đăng ký', route: '/user-approvals' }
@@ -37,7 +50,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
   const handleMenuPress = (item: any) => {
     if (item.isDropdown) {
       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-      setUsersExpanded(!usersExpanded);
+      item.setExpandedState(!item.expandedState);
     } else {
       router.push(item.route);
     }
@@ -71,13 +84,13 @@ export default function Sidebar({ isOpen }: SidebarProps) {
                       {item.name}
                     </Text>
                     {item.isDropdown && (
-                       <Ionicons name={usersExpanded ? 'chevron-up' : 'chevron-down'} size={18} color='#FFF' />
+                       <Ionicons name={item.expandedState ? 'chevron-up' : 'chevron-down'} size={18} color='#FFF' />
                     )}
                   </View>
                 )}
               </TouchableOpacity>
 
-              {item.isDropdown && usersExpanded && isOpen && (
+              {item.isDropdown && item.expandedState && isOpen && (
                 <View style={styles.submenuContainer}>
                   {item.subItems?.map((sub, sidx) => {
                     const isSubActive = pathname === sub.route;
