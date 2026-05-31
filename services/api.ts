@@ -3,8 +3,8 @@ import { Platform } from 'react-native';
 
 // Thay đổi URL này thành URL backend của bạn khi deploy (ví dụ: https://smartlib-be.onrender.com)
 // Link Render của bạn (Bỏ đoạn ?fbclid... ở đuôi đi cho chuẩn)
-// export const BASE_URL = 'https://smartlib-be.onrender.com';
-export const BASE_URL = 'http://127.0.0.1:8000';
+export const BASE_URL = 'https://smartlib-be.onrender.com';
+// export const BASE_URL = 'http://127.0.0.1:8000';
 // export const BASE_URL = Platform.OS === 'android' ? 'http://10.0.2.2:8000' : 'http://localhost:8000';
 
 const api = axios.create({
