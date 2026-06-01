@@ -24,6 +24,20 @@ export default function RootLayout() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
+    // Lấy thông báo cũ chưa duyệt khi mới vào web
+    const fetchPendingNotifications = async () => {
+      try {
+        const res = await fetch(BASE_URL + "/api/admin/pending-notifications");
+        if (res.ok) {
+          const data = await res.json();
+          setNotifications(data);
+        }
+      } catch (e) {
+        console.error("Lỗi lấy thông báo admin:", e);
+      }
+    };
+    fetchPendingNotifications();
+
     const wsUrl = BASE_URL.replace("http://", "ws://").replace("https://", "wss://") + "/ws/admin-notifications";
     let ws: WebSocket;
     
@@ -90,10 +104,11 @@ export default function RootLayout() {
           <Ionicons name="menu" size={28} color="#FFFFFF" />
         </TouchableOpacity>
 
-        <Text style={styles.headerTitle}>SmartLib System</Text>
+        <Text style={[styles.headerTitle, { flex: 1 }]}>SmartLib System</Text>
 
-        {/* Chuông Thông Báo */}
-        <View style={{ position: "relative", marginLeft: "auto", marginRight: 20, zIndex: 999 }}>
+        <View style={styles.rightHeaderControls}>
+          {/* Chuông Thông Báo */}
+          <View style={{ position: "relative", marginRight: 20, zIndex: 999 }}>
           <TouchableOpacity 
             style={styles.bellButton} 
             onPress={() => setShowDropdown(!showDropdown)}
@@ -146,6 +161,7 @@ export default function RootLayout() {
             style={{ marginLeft: 10 }}
           />
         </View>
+        </View>
       </View>
 
       {/* Bố cục chính dưới Header */}
@@ -181,10 +197,13 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginRight: 30,
   },
+  rightHeaderControls: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
   userMenu: {
     flexDirection: "row",
     alignItems: "center",
-    marginLeft: "auto",
   },
   userText: {
     color: "#FFFFFF",
