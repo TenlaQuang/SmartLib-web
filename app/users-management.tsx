@@ -200,6 +200,9 @@ export default function UsersManagement() {
                            <TouchableOpacity onPress={() => handleLockNFC(user)} style={styles.actionBtn}>
                               <Ionicons name="lock-closed-outline" size={20} color="#EF4444" />
                            </TouchableOpacity>
+                           <TouchableOpacity onPress={() => handleDeleteUser(user)} style={styles.actionBtn}>
+                              <Ionicons name="trash-outline" size={20} color="#EF4444" />
+                           </TouchableOpacity>
                         </View>
                      </View>
                   ))}

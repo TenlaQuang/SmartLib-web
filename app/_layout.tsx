@@ -83,7 +83,10 @@ export default function RootLayout() {
     }
   };
 
-  const formatTime = (date: Date) => {
+  const formatTime = (dateInput: any) => {
+    if (!dateInput) return "";
+    const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+    if (isNaN(date.getTime())) return "";
     const diff = Math.floor((new Date().getTime() - date.getTime()) / 60000);
     if (diff < 1) return "Vừa xong";
     if (diff < 60) return `${diff} phút trước`;
